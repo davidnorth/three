@@ -71,7 +71,7 @@ export function meshChunk(chunk) {
 
   function getBlockId(x, y, z) {
     if(x<0 || y<0 || z<0 || x>=CHUNK_WIDTH || y>=CHUNK_HEIGHT || z>=CHUNK_WIDTH){
-      return 0;
+      return 1;
     }
     return chunk[getBlockIndex(x, y, z)];
   }
@@ -138,10 +138,10 @@ export function meshChunk(chunk) {
         // Back face
         if (isNonSolid(getBlockId(x, y, z - 1))) {
           // Add verts
-          vertsTmp.push(x, y + 1, z); // top left
           vertsTmp.push(x + 1, y + 1, z); // top right
           vertsTmp.push(x + 1, y, z); // bottom right
           vertsTmp.push(x, y, z); // bottom left
+          vertsTmp.push(x, y + 1, z); // top left
           // Set face normal front
           for (let i = 0; i < 4; i++) {
             normalsTmp.push(faceNormals.back.x, faceNormals.back.y, faceNormals.back.z);
@@ -157,10 +157,10 @@ export function meshChunk(chunk) {
         // Front face
         if (isNonSolid(getBlockId(x, y, z + 1))) {
           // Add verts
-          vertsTmp.push(x + 1, y + 1, z + 1); // top right
           vertsTmp.push(x, y + 1, z + 1); // top left
           vertsTmp.push(x, y, z + 1); // bottom left
           vertsTmp.push(x + 1, y, z + 1); // bottom right
+          vertsTmp.push(x + 1, y + 1, z + 1); // top right
           // Set face normal front
           for (let i = 0; i < 4; i++) {
             normalsTmp.push(faceNormals.front.x, faceNormals.front.y, faceNormals.front.z);
@@ -176,10 +176,10 @@ export function meshChunk(chunk) {
         // Left face
         if (isNonSolid(getBlockId(x - 1, y, z))) {
           // Add verts
+          vertsTmp.push(x, y + 1, z); // top front
           vertsTmp.push(x, y, z); // bottom front
           vertsTmp.push(x, y, z + 1); // bottom back
           vertsTmp.push(x, y + 1, z + 1); // top back
-          vertsTmp.push(x, y + 1, z); // top front
           // Set face normal left
           for (let i = 0; i < 4; i++) {
             normalsTmp.push(faceNormals.left.x, faceNormals.left.y, faceNormals.left.z);
@@ -195,10 +195,10 @@ export function meshChunk(chunk) {
         // Right face
         if (isNonSolid(getBlockId(x + 1, y, z))) {
           // Add verts
-          vertsTmp.push(x + 1, y + 1, z); // top front
           vertsTmp.push(x + 1, y + 1, z + 1); // top back
           vertsTmp.push(x + 1, y, z + 1); // bottom back
           vertsTmp.push(x + 1, y, z); // bottom front
+          vertsTmp.push(x + 1, y + 1, z); // top front
           // Set face normal right
           for (let i = 0; i < 4; i++) {
             normalsTmp.push(faceNormals.right.x, faceNormals.right.y, faceNormals.right.z);
