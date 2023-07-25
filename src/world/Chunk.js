@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import { generate } from './generator.js'
+
 CHUNK_WIDTH = 16;
 CHUNK_HEIGHT = 64;
 BLOCKS_PER_CHUNK = CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_HEIGHT;
@@ -6,10 +9,9 @@ BLOCKS_PER_CHUNK = CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_HEIGHT;
 const TEXTURE_BLOCKS_WIDTH = 8
 const TEXTURE_BLOCKS_HEIGHT = 1
 // ...and resulting offset per block in UV space
-const unitOffsetX = 1/8
-const unitOffsetY = 1
+const unitOffsetX = 1/TEXTURE_BLOCKS_WIDTH
+const unitOffsetY = 1/TEXTURE_BLOCKS_HEIGHT
 
-// Define the six possible normal vectors
 const faceNormals = {
   up: new THREE.Vector3(0, 1, 0),
   down: new THREE.Vector3(0, -1, 0),
@@ -72,6 +74,8 @@ class Chunk {
       castShadow: true,
       receiveShadow: true,
     });
+    this.mesh.position.x = ox * CHUNK_WIDTH
+    this.mesh.position.z = oz * CHUNK_WIDTH
   }
 
   // x represents left to right, z forwards and backwards and y up and down
@@ -83,7 +87,7 @@ class Chunk {
 
   getBlockId(x, y, z) {
     if(x<0 || y<0 || z<0 || x>=CHUNK_WIDTH || y>=CHUNK_HEIGHT || z>=CHUNK_WIDTH){
-      return 1;
+      return 0;
     }
     return this.blocks[this.getBlockIndex(x, y, z)];
   }
@@ -93,13 +97,28 @@ class Chunk {
     return blockId === 0;
   }
 
-  // function to generate the mesh geometry for this chunk
+  setBlock(x, y, z, blockId) {
+    this.blocks[this.getBlockIndex(x, y, z)] = blockId;
+  }
+
+  generateBlocks() {
+    for (let bx = 0; bx < CHUNK_WIDTH; bx++) {
+      for (let by = 0; by < CHUNK_HEIGHT; by++) {
+        for (let bz = 0; bz < CHUNK_WIDTH; bz++) {
+          const blockId = generate(bx + this.ox * CHUNK_WIDTH, by, bz + this.oz * CHUNK_WIDTH);
+          // const blockId = by > 32 ? 0 : 1;
+          this.setBlock(bx, by, bz, blockId);
+        }
+      }
+    }
+  }
+
   generateMesh() {
     // TODO: Rename these removing 'Tmp'
-    const vertsTmp = [];
-    const indicesTmp = [];
-    const normalsTmp = [];
-    const uvsTmp = [];
+    const verts = [];
+    const indices = [];
+    const normals = [];
+    const uvs = [];
 
     let vertIndex = 0;
 
@@ -117,133 +136,134 @@ class Chunk {
           // Top face
           if (this.isNonSolid(this.getBlockId(x, y + 1, z))) {
             // Add verts
-            vertsTmp.push(x, y + 1, z); // back left
-            vertsTmp.push(x, y + 1, z + 1); // front left
-            vertsTmp.push(x + 1, y + 1, z + 1); // front right
-            vertsTmp.push(x + 1, y + 1, z); // back right
+            verts.push(x, y + 1, z); // back left
+            verts.push(x, y + 1, z + 1); // front left
+            verts.push(x + 1, y + 1, z + 1); // front right
+            verts.push(x + 1, y + 1, z); // back right
             // Set face normal up
             for (let i = 0; i < 4; i++) {
-              normalsTmp.push(faceNormals.up.x, faceNormals.up.y, faceNormals.up.z);
+              normals.push(faceNormals.up.x, faceNormals.up.y, faceNormals.up.z);
             }
             // Add UVs
-            Array.prototype.push.apply(uvsTmp, BLOCK_ID_TEXTURES[blockId].top);
+            Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].top);
             // Add tris
-            indicesTmp.push(vertIndex, vertIndex + 1, vertIndex + 2);
-            indicesTmp.push(vertIndex, vertIndex + 2, vertIndex + 3);
+            indices.push(vertIndex, vertIndex + 1, vertIndex + 2);
+            indices.push(vertIndex, vertIndex + 2, vertIndex + 3);
             vertIndex += 4;
           }
 
           // Back face
           if (this.isNonSolid(this.getBlockId(x, y, z - 1))) {
             // Add verts
-            vertsTmp.push(x + 1, y + 1, z); // top right
-            vertsTmp.push(x + 1, y, z); // bottom right
-            vertsTmp.push(x, y, z); // bottom left
-            vertsTmp.push(x, y + 1, z); // top left
+            verts.push(x + 1, y + 1, z); // top right
+            verts.push(x + 1, y, z); // bottom right
+            verts.push(x, y, z); // bottom left
+            verts.push(x, y + 1, z); // top left
             // Set face normal front
             for (let i = 0; i < 4; i++) {
-              normalsTmp.push(faceNormals.back.x, faceNormals.back.y, faceNormals.back.z);
+              normals.push(faceNormals.back.x, faceNormals.back.y, faceNormals.back.z);
             }
             // Add UVs
-            Array.prototype.push.apply(uvsTmp, BLOCK_ID_TEXTURES[blockId].side);
+            Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
-            indicesTmp.push(vertIndex, vertIndex + 1, vertIndex + 2);
-            indicesTmp.push(vertIndex, vertIndex + 2, vertIndex + 3);
+            indices.push(vertIndex, vertIndex + 1, vertIndex + 2);
+            indices.push(vertIndex, vertIndex + 2, vertIndex + 3);
             vertIndex += 4;
           }
 
           // Front face
           if (this.isNonSolid(this.getBlockId(x, y, z + 1))) {
             // Add verts
-            vertsTmp.push(x, y + 1, z + 1); // top left
-            vertsTmp.push(x, y, z + 1); // bottom left
-            vertsTmp.push(x + 1, y, z + 1); // bottom right
-            vertsTmp.push(x + 1, y + 1, z + 1); // top right
+            verts.push(x, y + 1, z + 1); // top left
+            verts.push(x, y, z + 1); // bottom left
+            verts.push(x + 1, y, z + 1); // bottom right
+            verts.push(x + 1, y + 1, z + 1); // top right
             // Set face normal front
             for (let i = 0; i < 4; i++) {
-              normalsTmp.push(faceNormals.front.x, faceNormals.front.y, faceNormals.front.z);
+              normals.push(faceNormals.front.x, faceNormals.front.y, faceNormals.front.z);
             }
             // Add UVs
-            Array.prototype.push.apply(uvsTmp, BLOCK_ID_TEXTURES[blockId].side);
+            Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
-            indicesTmp.push(vertIndex, vertIndex + 1, vertIndex + 2);
-            indicesTmp.push(vertIndex, vertIndex + 2, vertIndex + 3);
+            indices.push(vertIndex, vertIndex + 1, vertIndex + 2);
+            indices.push(vertIndex, vertIndex + 2, vertIndex + 3);
             vertIndex += 4;
           }
 
           // Left face
           if (this.isNonSolid(this.getBlockId(x - 1, y, z))) {
             // Add verts
-            vertsTmp.push(x, y + 1, z); // top front
-            vertsTmp.push(x, y, z); // bottom front
-            vertsTmp.push(x, y, z + 1); // bottom back
-            vertsTmp.push(x, y + 1, z + 1); // top back
+            verts.push(x, y + 1, z); // top front
+            verts.push(x, y, z); // bottom front
+            verts.push(x, y, z + 1); // bottom back
+            verts.push(x, y + 1, z + 1); // top back
             // Set face normal left
             for (let i = 0; i < 4; i++) {
-              normalsTmp.push(faceNormals.left.x, faceNormals.left.y, faceNormals.left.z);
+              normals.push(faceNormals.left.x, faceNormals.left.y, faceNormals.left.z);
             }
             // Add UVs
-            Array.prototype.push.apply(uvsTmp, BLOCK_ID_TEXTURES[blockId].side);
+            Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
-            indicesTmp.push(vertIndex, vertIndex + 1, vertIndex + 2);
-            indicesTmp.push(vertIndex, vertIndex + 2, vertIndex + 3);
+            indices.push(vertIndex, vertIndex + 1, vertIndex + 2);
+            indices.push(vertIndex, vertIndex + 2, vertIndex + 3);
             vertIndex += 4;
           }
 
           // Right face
           if (this.isNonSolid(this.getBlockId(x + 1, y, z))) {
             // Add verts
-            vertsTmp.push(x + 1, y + 1, z + 1); // top back
-            vertsTmp.push(x + 1, y, z + 1); // bottom back
-            vertsTmp.push(x + 1, y, z); // bottom front
-            vertsTmp.push(x + 1, y + 1, z); // top front
+            verts.push(x + 1, y + 1, z + 1); // top back
+            verts.push(x + 1, y, z + 1); // bottom back
+            verts.push(x + 1, y, z); // bottom front
+            verts.push(x + 1, y + 1, z); // top front
             // Set face normal right
             for (let i = 0; i < 4; i++) {
-              normalsTmp.push(faceNormals.right.x, faceNormals.right.y, faceNormals.right.z);
+              normals.push(faceNormals.right.x, faceNormals.right.y, faceNormals.right.z);
             }
             // Add UVs
-            Array.prototype.push.apply(uvsTmp, BLOCK_ID_TEXTURES[blockId].side);
+            Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
-            indicesTmp.push(vertIndex, vertIndex + 1, vertIndex + 2);
-            indicesTmp.push(vertIndex, vertIndex + 2, vertIndex + 3);
+            indices.push(vertIndex, vertIndex + 1, vertIndex + 2);
+            indices.push(vertIndex, vertIndex + 2, vertIndex + 3);
             vertIndex += 4;
           }
 
           // Bottom face
           if (this.isNonSolid(this.getBlockId(x, y - 1, z))) {
             // Add verts
-            vertsTmp.push(x, y, z); // front left
-            vertsTmp.push(x + 1, y, z); // front right
-            vertsTmp.push(x + 1, y, z + 1); // back right
-            vertsTmp.push(x, y, z + 1); // back left
+            verts.push(x, y, z); // front left
+            verts.push(x + 1, y, z); // front right
+            verts.push(x + 1, y, z + 1); // back right
+            verts.push(x, y, z + 1); // back left
             // Set face normal down
             for (let i = 0; i < 4; i++) {
-              normalsTmp.push(faceNormals.down.x, faceNormals.down.y, faceNormals.down.z);
+              normals.push(faceNormals.down.x, faceNormals.down.y, faceNormals.down.z);
             }
             // Add UVs
-            Array.prototype.push.apply(uvsTmp, BLOCK_ID_TEXTURES[blockId].bottom);
+            Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].bottom);
             // Add tris
-            indicesTmp.push(vertIndex, vertIndex + 1, vertIndex + 2);
-            indicesTmp.push(vertIndex, vertIndex + 2, vertIndex + 3);
+            indices.push(vertIndex, vertIndex + 1, vertIndex + 2);
+            indices.push(vertIndex, vertIndex + 2, vertIndex + 3);
             vertIndex += 4;
           }
-
-
 
         }
       }
     }
 
+
     // geometry holds all faces for a chunk
     // Assign the vertex, index, and UV data to the geometry
-    this.geometry.dispose();
-    this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertsTmp), 3));
-    this.geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indicesTmp), 1));
-    this.geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normalsTmp, 3));
-    this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvsTmp, 2));
-
+    // this.geometry.dispose();
+    this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+    this.geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
+    this.geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   }
 
 
 
 }
+
+
+export default Chunk;
