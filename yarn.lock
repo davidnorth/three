@@ -1224,6 +1224,11 @@ lightningcss@^1.16.1:
     lightningcss-linux-x64-musl "1.21.5"
     lightningcss-win32-x64-msvc "1.21.5"
 
+lil-gui@^0.18.2:
+  version "0.18.2"
+  resolved "https://registry.yarnpkg.com/lil-gui/-/lil-gui-0.18.2.tgz#e28a627be6a38bb80e9237817ad2c530eeb76279"
+  integrity sha512-DgdrLy3/KGC0PiQLKgOcJMPItP4xY4iWgJ9+91Zaxfr8GCTmMps05QS9w9jW7yspILlbscbquwjOwxmWnSx5Uw==
+
 lines-and-columns@^1.1.6:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
@@ -1513,6 +1518,11 @@ term-size@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/term-size/-/term-size-2.2.1.tgz#2a6a54840432c2fb6320fea0f415531e90189f54"
   integrity sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==
+
+three-first-person-controls@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/three-first-person-controls/-/three-first-person-controls-0.2.1.tgz#ff793b9c930ee49c5308dede9b7513f946b7c08c"
+  integrity sha512-lvBUgk/Nq8TpHYdWBd7zxla8oPe6M/7cjfHcy3COfid9hB5uaeZWz8YvnoQ3/rig2zWWfV8jb7T48UtOZPhKYw==
 
 three-orbitcontrols@^2.110.3:
   version "2.110.3"

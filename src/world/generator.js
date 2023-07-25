@@ -8,6 +8,20 @@ NOISE_SCALE_1 = 0.05;
 
 export function generate(x,y,z) {
 
+  // return y>0 ? 0 : 1;
+
+  return simpleHeightmap(x,y,z)
+
+  const value = simplex.noise3d(x * NOISE_SCALE_1, y * NOISE_SCALE_1, z * NOISE_SCALE_1)
+
+
+  return value > 0 ? 2 : 0;
+
+
+}
+
+
+function simpleHeightmap(x,y,z) {
   let groundHeight = simplex.noise(x * NOISE_SCALE_1, z * NOISE_SCALE_1) * 4 + GROUND_LEVEL;
 
   // air
@@ -18,5 +32,4 @@ export function generate(x,y,z) {
   if (y > groundHeight-4) return 2;
   // stone
   return 3;
-
 }

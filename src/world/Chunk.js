@@ -70,10 +70,10 @@ class Chunk {
     this.oz = oz;
     this.blocks = new Uint8Array(BLOCKS_PER_CHUNK);
     this.geometry = new THREE.BufferGeometry();
-    this.mesh = new THREE.Mesh(this.geometry, {
-      castShadow: true,
-      receiveShadow: true,
-    });
+    this.mesh = new THREE.Mesh(this.geometry);
+    this.mesh.enableRaycast = true;
+    this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
     this.mesh.position.x = ox * CHUNK_WIDTH
     this.mesh.position.z = oz * CHUNK_WIDTH
   }
