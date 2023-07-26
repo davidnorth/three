@@ -224,9 +224,9 @@ class Chunk {
             );
             // top left
             const vl4 = this.vertexAO(
-              this.solidAt(x, y , z-1),
-              this.solidAt(x-1, y+1 , z-1),
-              this.solidAt(x-1, y , z-1)
+              this.solidAt(x, y+1 , z-1),
+              this.solidAt(x-1, y , z-1),
+              this.solidAt(x-1, y+1 , z-1)
             );
             lightValues.push(vl1, vl2, vl3, vl4);
 
@@ -254,8 +254,8 @@ class Chunk {
             // Vertex lighting
             // top left
             const vl1 = this.vertexAO(
-              this.solidAt(x, y , z+1),
-              this.solidAt(x-1, y+1, z+1),
+              this.solidAt(x-1, y+1 , z+1),
+              this.solidAt(x, y, z+1),
               this.solidAt(x-1, y, z+1)
             );
             // bottom left
@@ -349,12 +349,37 @@ class Chunk {
           // Right face
           if (this.isNonSolid(this.getBlockId(x + 1, y, z))) {
             // Add verts
-            verts.push(x + 1, y + 1, z + 1); // top back
-            verts.push(x + 1, y, z + 1); // bottom back
-            verts.push(x + 1, y, z); // bottom front
-            verts.push(x + 1, y + 1, z); // top front
+            verts.push(x + 1, y + 1, z + 1); // top front
+            verts.push(x + 1, y, z + 1); // bottom front
+            verts.push(x + 1, y, z); // bottom back
+            verts.push(x + 1, y + 1, z); // top back
             // Vertex lighting
-            lightValues.push(0.7, 0.7, 0.7, 0.7)
+            // top front
+            const vl1 = this.vertexAO(
+              this.solidAt(x+1, y , z+1),
+              this.solidAt(x+1, y+1, z),
+              this.solidAt(x+1, y , z)
+            );
+            // bottom front
+            const vl2 = this.vertexAO(
+              this.solidAt(x+1, y, z+1),
+              this.solidAt(x+1, y-1, z),
+              this.solidAt(x+1, y-1, z+1)
+            );
+            // bottom back
+            const vl3 = this.vertexAO(
+              this.solidAt(x+1, y, z-1),
+              this.solidAt(x+1, y-1, z),
+              this.solidAt(x+1, y-1, z-1)
+            );
+            // top back
+            const vl4 = this.vertexAO(
+              this.solidAt(x+1, y , z+1),
+              this.solidAt(x+1, y+1 , z),
+              this.solidAt(x+1, y+1 , z-1)
+            );
+            lightValues.push(vl1, vl2, vl3, vl4);
+
             // Set face normal right
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.right.x, faceNormals.right.y, faceNormals.right.z);
