@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { createDebugScene } from './scenes/debug';
+import { createHudScene } from './scenes/hud';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import {TexturePass} from 'three/examples/jsm/postprocessing/TexturePass.js';
@@ -27,6 +28,7 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2( 0x9999F8, 0.010);
 
 const debugScene = createDebugScene();
+const hudScene = createHudScene();
 
 
 
@@ -35,6 +37,10 @@ camera.position.x = 8;
 camera.position.y = 40;
 camera.position.z = 30;
 camera.lookAt(new THREE.Vector3(8, 16, 8));
+
+const guiCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 1, 1000 );
+guiCamera.position.z = 10;
+
 
 // Raycaster to find which block face we are looking at
 const raycaster = new THREE.Raycaster();
@@ -75,6 +81,9 @@ function castRayFromCamera() {
 
   if(intersects.length){
     intersects[0].point
+
+    // position hitPoint sphere at the intersection point
+    hitPoint.position.copy(intersects[0].point);
 
     // create a copy of the intserect point moved forward along the face normal by 0.5
     newBlockPos = intersects[0].point
@@ -162,14 +171,14 @@ const hitPoint = new THREE.Mesh( geometry, material );
 hitPoint.position.x = 8;
 hitPoint.position.y = 16;
 hitPoint.position.z = 8;
-scene.add( hitPoint );
+debugScene.add( hitPoint );
 
 // a cube 1x1x1 with a semi transparent green material
 const cubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
 cubeGeometry.translate(+0.5, +0.5, +0.5);
 const cubeMaterial = new THREE.MeshLambertMaterial( {color: 0x00ff00, transparent: true, opacity: 0.5} );
 const newBlockPositionCube = new THREE.Mesh( cubeGeometry, cubeMaterial );
-scene.add( newBlockPositionCube );
+debugScene.add( newBlockPositionCube );
 
 
 
@@ -193,7 +202,6 @@ scene.add(sun);
 const light = new THREE.AmbientLight( 0xC4E9FF, 0.7 ); 
 scene.add( light );
 
-// gui.add(contrastPass.uniforms.contrast, 'value', 0, 2).name('contrast');
 
 
 const renderer = new THREE.WebGLRenderer({ 
@@ -224,21 +232,35 @@ var overlayRenderPass = new RenderPass(debugScene, camera);
 overlayRenderPass.clear = false;
 overlayComposer.addPass(overlayRenderPass);
 
+var guiComposer = new EffectComposer(renderer);
+// Add render pass for the GUI scene
+var guiRenderPass = new RenderPass(hudScene, guiCamera);
+guiRenderPass.clear = false;
+guiComposer.addPass(guiRenderPass);
+
+
+gui.add(contrastPass.uniforms.contrast, 'value', 0, 2).name('contrast');
+
+
+window.debugVisible = false;
+
+gui.add(self, 'debugVisible');
+
+
 function animate() {
   requestAnimationFrame(animate);
   castRayFromCamera();
 
-  // First clear the renderer
   renderer.clear();
-
-  // Render the main scene
   mainComposer.render();
-
-  // Clear the depth buffer
   renderer.clearDepth();
+  if(window.debugVisible) {
+    // Render the overlay scene
+    overlayComposer.render();
+    renderer.clearDepth();
+  }
+  guiComposer.render();
 
-  // Render the overlay scene
-  overlayComposer.render();
 }
 
 animate()
