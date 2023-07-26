@@ -1,15 +1,19 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
-import {axisLines} from './render/debug';
+import { createDebugScene } from './scenes/debug';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import {TexturePass} from 'three/examples/jsm/postprocessing/TexturePass.js';
+import {Pass} from 'three/examples/jsm/postprocessing/Pass.js';
+
+
 import Chunk from './world/Chunk';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { contrastShader } from './render/shaders';
 import GUI from 'lil-gui'; 
+
+const BG_COLOR = 0x9999ff;
 
 const gui = new GUI();
 
@@ -20,6 +24,12 @@ let blockMaterial;
 let defaultChunk;
 
 const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2( 0x9999F8, 0.010);
+
+const debugScene = createDebugScene();
+
+
+
 const camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
 camera.position.x = 8;
 camera.position.y = 40;
@@ -183,6 +193,7 @@ scene.add(sun);
 const light = new THREE.AmbientLight( 0xC4E9FF, 0.7 ); 
 scene.add( light );
 
+// gui.add(contrastPass.uniforms.contrast, 'value', 0, 2).name('contrast');
 
 
 const renderer = new THREE.WebGLRenderer({ 
@@ -190,36 +201,44 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.shadowMap.enabled = true;
 renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.setClearColor(0x9999ff); 
-// renderer.gammaOutput = true;
-// renderer.gammaFactor = 5.2; // Use 2.2 for sRGB textures
+renderer.setClearColor(BG_COLOR);
 document.body.appendChild( renderer.domElement );
 
-
-
-// Debug elements
-axisLines(scene);
-
-
-// Usage
-var composer = new EffectComposer( renderer );
-composer.addPass( new RenderPass( scene, camera ) );
-var contrastPass = new ShaderPass( contrastShader );
-contrastPass.uniforms.contrast.value = 0.9;  // Change contrast here
-composer.addPass( contrastPass );
-
-
-// setup first person controls
-// const controls = new FirstPersonControls(camera, renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 
 
-function animate(delta) {
-	requestAnimationFrame( animate );
 
+// Create composers for both scenes
+var mainComposer = new EffectComposer(renderer);
+var overlayComposer = new EffectComposer(renderer);
+
+// Add render pass for the main scene
+mainComposer.addPass(new RenderPass(scene, camera));
+// Add contrast shader
+var contrastPass = new ShaderPass(contrastShader);
+contrastPass.uniforms.contrast.value = 1.0;
+mainComposer.addPass(contrastPass);
+
+// Add render pass for the overlay scene
+var overlayRenderPass = new RenderPass(debugScene, camera);
+overlayRenderPass.clear = false;
+overlayComposer.addPass(overlayRenderPass);
+
+function animate() {
+  requestAnimationFrame(animate);
   castRayFromCamera();
 
-  composer.render();
+  // First clear the renderer
+  renderer.clear();
+
+  // Render the main scene
+  mainComposer.render();
+
+  // Clear the depth buffer
+  renderer.clearDepth();
+
+  // Render the overlay scene
+  overlayComposer.render();
 }
 
 animate()
