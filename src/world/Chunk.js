@@ -96,6 +96,14 @@ class Chunk {
     // TODO: there will be other non-solid blocks
     return blockId === 0;
   }
+  isSolid(blockId){
+    // TODO: there will be other non-solid blocks
+    return blockId >  0 ? 1 : 0;
+  }
+  solidAt(x, y, z){
+    return this.getBlockId(x, y, z) > 0 ? 1 : 0;
+  }
+
 
   setBlock(x, y, z, blockId) {
     this.blocks[this.getBlockIndex(x, y, z)] = blockId;
@@ -119,8 +127,11 @@ class Chunk {
     const indices = [];
     const normals = [];
     const uvs = [];
+    const lightValues = [];
 
     let vertIndex = 0;
+
+    let side1, side2, corner;
 
     // iterate through each block in the chunk
     for (let x = 0; x < CHUNK_WIDTH; x++) {
@@ -140,6 +151,37 @@ class Chunk {
             verts.push(x, y + 1, z + 1); // front left
             verts.push(x + 1, y + 1, z + 1); // front right
             verts.push(x + 1, y + 1, z); // back right
+
+
+            // Vertex lighting
+            // back left
+            const vl1 = this.vertexAO(
+              this.solidAt(x, y + 1, z - 1),
+              this.solidAt(x - 1, y + 1, z),
+              this.solidAt(x - 1, y + 1, z - 1)
+            );
+            // front left
+            const vl2 = this.vertexAO(
+              this.solidAt(x, y + 1, z + 1),
+              this.solidAt(x - 1, y + 1, z),
+              this.solidAt(x - 1, y + 1, z + 1)
+            );
+            // front right
+            const vl3 = this.vertexAO(
+              this.solidAt(x, y + 1, z + 1),
+              this.solidAt(x + 1, y + 1, z),
+              this.solidAt(x + 1, y + 1, z + 1)
+            );
+            // back right
+            const vl4 = this.vertexAO(
+              this.solidAt(x, y + 1, z - 1),
+              this.solidAt(x + 1, y + 1, z),
+              this.solidAt(x + 1, y + 1, z - 1)
+            );
+            lightValues.push(vl1, vl2, vl3, vl4);
+
+
+
             // Set face normal up
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.up.x, faceNormals.up.y, faceNormals.up.z);
@@ -159,6 +201,35 @@ class Chunk {
             verts.push(x + 1, y, z); // bottom right
             verts.push(x, y, z); // bottom left
             verts.push(x, y + 1, z); // top left
+            // Vertex lighting
+
+            // Vertex lighting
+            // top right
+            const vl1 = this.vertexAO(
+              this.solidAt(x+1, y , z-1),
+              this.solidAt(x, y+1, z-1),
+              this.solidAt(x + 1, y + 1, z-1)
+            );
+            // bottom right
+            const vl2 = this.vertexAO(
+              this.solidAt(x+1, y, z-1),
+              this.solidAt(x, y-1, z-1),
+              this.solidAt(x, y-1, z-1)
+            );
+            // bottom left
+            const vl3 = this.vertexAO(
+              this.solidAt(x, y-1, z-1),
+              this.solidAt(x-1, y, z-1),
+              this.solidAt(x-1, y-1, z-1)
+            );
+            // top left
+            const vl4 = this.vertexAO(
+              this.solidAt(x, y , z-1),
+              this.solidAt(x-1, y+1 , z-1),
+              this.solidAt(x-1, y , z-1)
+            );
+            lightValues.push(vl1, vl2, vl3, vl4);
+
             // Set face normal front
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.back.x, faceNormals.back.y, faceNormals.back.z);
@@ -178,6 +249,37 @@ class Chunk {
             verts.push(x, y, z + 1); // bottom left
             verts.push(x + 1, y, z + 1); // bottom right
             verts.push(x + 1, y + 1, z + 1); // top right
+            // Vertex lighting
+
+            // Vertex lighting
+            // top left
+            const vl1 = this.vertexAO(
+              this.solidAt(x, y , z+1),
+              this.solidAt(x-1, y+1, z+1),
+              this.solidAt(x-1, y, z+1)
+            );
+            // bottom left
+            const vl2 = this.vertexAO(
+              this.solidAt(x, y-1, z+1),
+              this.solidAt(x-1, y, z+1),
+              this.solidAt(x-1, y-1, z+1)
+            );
+            // bottom right
+            const vl3 = this.vertexAO(
+              this.solidAt(x+1, y, z+1),
+              this.solidAt(x, y-1, z+1),
+              this.solidAt(x, y-1, z+1)
+            );
+            // top right
+            const vl4 = this.vertexAO(
+              this.solidAt(x+1, y , z+1),
+              this.solidAt(x, y+1 , z+1),
+              this.solidAt(x, y , z+1)
+            );
+            lightValues.push(vl1, vl2, vl3, vl4);
+
+
+
             // Set face normal front
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.front.x, faceNormals.front.y, faceNormals.front.z);
@@ -193,10 +295,45 @@ class Chunk {
           // Left face
           if (this.isNonSolid(this.getBlockId(x - 1, y, z))) {
             // Add verts
-            verts.push(x, y + 1, z); // top front
-            verts.push(x, y, z); // bottom front
-            verts.push(x, y, z + 1); // bottom back
-            verts.push(x, y + 1, z + 1); // top back
+            verts.push(x, y + 1, z); // top back
+            verts.push(x, y, z); // bottom back
+            verts.push(x, y, z + 1); // bottom front
+            verts.push(x, y + 1, z + 1); // top front
+            // Vertex lighting
+
+            // top back
+            const vl1 = this.vertexAO(
+              this.solidAt(x-1, y+1 , z),
+              this.solidAt(x-1, y, z-1),
+              this.solidAt(x-1, y+1 , z-1)
+            );
+            // bottom back
+            const vl2 = this.vertexAO(
+              this.solidAt(x-1, y, z-1),
+              this.solidAt(x-1, y-1, z),
+              this.solidAt(x-1, y-1, z-1)
+            );
+            // bottom front
+            const vl3 = this.vertexAO(
+              this.solidAt(x-1, y, z+1),
+              this.solidAt(x-1, y-1, z),
+              this.solidAt(x-1, y, z+1)
+            );
+            // top front
+            const vl4 = this.vertexAO(
+              this.solidAt(x-1, y+1 , z),
+              this.solidAt(x-1, y , z+1),
+              this.solidAt(x-1, y , z)
+            );
+            lightValues.push(vl1, vl2, vl3, vl4);
+
+
+
+
+
+
+
+
             // Set face normal left
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.left.x, faceNormals.left.y, faceNormals.left.z);
@@ -216,6 +353,8 @@ class Chunk {
             verts.push(x + 1, y, z + 1); // bottom back
             verts.push(x + 1, y, z); // bottom front
             verts.push(x + 1, y + 1, z); // top front
+            // Vertex lighting
+            lightValues.push(0.7, 0.7, 0.7, 0.7)
             // Set face normal right
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.right.x, faceNormals.right.y, faceNormals.right.z);
@@ -235,6 +374,9 @@ class Chunk {
             verts.push(x + 1, y, z); // front right
             verts.push(x + 1, y, z + 1); // back right
             verts.push(x, y, z + 1); // back left
+            // Vertex lighting
+            lightValues.push(1,1,1,1);
+
             // Set face normal down
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.down.x, faceNormals.down.y, faceNormals.down.z);
@@ -259,6 +401,24 @@ class Chunk {
     this.geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
     this.geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
+    const lightValuesAttribute = new THREE.Float32BufferAttribute(lightValues, 1);
+    this.geometry.setAttribute('lightValue', lightValuesAttribute);
+
+
+
+  }
+
+
+  // Using this chart we can deduce a pattern.  
+  // Let side1 and side2 be 0/1 depending on the presence of the side voxels 
+  // and let corner be the opacity state of the corner voxel.  
+  // Then we can compute the ambient occlusion of a vertex using the following function:
+  vertexAO(side1, side2, corner) {
+    if (side1 && side2) {
+      return 0
+    }
+    return 3 - (side1 + side2 + corner)
   }
 
 

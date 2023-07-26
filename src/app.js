@@ -5,13 +5,11 @@ import { createDebugScene } from './scenes/debug';
 import { createHudScene } from './scenes/hud';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import {TexturePass} from 'three/examples/jsm/postprocessing/TexturePass.js';
-import {Pass} from 'three/examples/jsm/postprocessing/Pass.js';
 
 
 import Chunk from './world/Chunk';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
-import { contrastShader } from './render/shaders';
+import { contrastShader, basicShader } from './render/shaders';
 import GUI from 'lil-gui'; 
 
 const BG_COLOR = 0x9999ff;
@@ -44,7 +42,7 @@ guiCamera.position.z = 10;
 
 // Raycaster to find which block face we are looking at
 const raycaster = new THREE.Raycaster();
-raycaster.far = 15;
+raycaster.far = 30;
 raycaster.near = 0.1;
 
 let newBlockPos;
@@ -142,6 +140,8 @@ document.addEventListener('contextmenu', function (event) {
 )
 
 
+let blockShaderMaterial;
+
 
 
 
@@ -149,6 +149,10 @@ const textureLoader = new THREE.TextureLoader();
 textureLoader.load('/blocks/blocks.png', function(texture){
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter;
+
+  blockShaderMaterial = new THREE.ShaderMaterial(basicShader);
+
+  blockShaderMaterial.uniforms.u_texture.value = texture;
 
   blockMaterial = new THREE.MeshLambertMaterial({
     map: texture,
@@ -158,7 +162,7 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   const chunk = new Chunk(0,0,0)
   chunk.generateBlocks();
   chunk.generateMesh();
-  chunk.mesh.material = blockMaterial;
+  chunk.mesh.material = blockShaderMaterial;
   scene.add(chunk.mesh);
   defaultChunk = chunk;
 });
@@ -201,6 +205,7 @@ sun.shadow.camera.far = 500;
 scene.add(sun);
 const light = new THREE.AmbientLight( 0xC4E9FF, 0.7 ); 
 scene.add( light );
+window.sun=sun;
 
 
 

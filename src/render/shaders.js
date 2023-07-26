@@ -27,3 +27,38 @@ export const contrastShader = {
     "}"
   ].join("\n")
 };
+
+
+
+export const basicShader = { 
+  uniforms: {
+    u_texture: { type: "t", value: null },
+  },
+
+  vertexShader: `
+    attribute float lightValue;
+    varying float vLightValue;
+    varying vec2 vUv;
+
+    void main() {
+        vUv = uv;
+        vLightValue = lightValue;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+
+  fragmentShader: `
+    varying float vLightValue;
+    varying vec2 vUv;
+    uniform sampler2D u_texture;
+    void main() {
+        vec4 texColor = texture2D(u_texture, vUv);
+        texColor.rgb *= (0.1 + (vLightValue * 0.3)); // Modulate the color by the light value
+        gl_FragColor = texColor;
+    }
+  `
+
+
+        // #vec4 texColor = vec4(1.0,1.0,1.0,1.0);
+        // vec4 texColor = texture2D(u_texture, vUv);
+};
