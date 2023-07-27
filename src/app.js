@@ -29,6 +29,39 @@ const debugScene = createDebugScene();
 const hudScene = createHudScene();
 
 
+const sun = new THREE.DirectionalLight( 0xFFF2D6, 1);
+sun.position.set( 50, 50, 50);
+sun.shadow.bias = 0.0001;
+sun.castShadow = true;
+// Define the resolution of the shadow map
+sun.shadow.mapSize.width = 1024 * 2;
+sun.shadow.mapSize.height = 1024 * 2;
+// Define the visible area of the projected shadow
+sun.shadow.camera.left = -20;
+sun.shadow.camera.right = 20;
+sun.shadow.camera.top = 20;
+sun.shadow.camera.bottom = -20;
+// Set the near and far plane of the shadow camera
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 500;
+scene.add(sun);
+const light = new THREE.AmbientLight( 0xC4E9FF, 0.7 ); 
+scene.add( light );
+window.sun=sun;
+
+const lightCamera = new THREE.OrthographicCamera();
+lightCamera.position.copy(sun.position);
+lightCamera.lookAt(scene.position); 
+lightCamera.updateProjectionMatrix();
+lightCamera.updateMatrixWorld();
+
+// Now create a matrix that transforms from world space to light's clip space
+const lightMatrix = new THREE.Matrix4();
+lightMatrix.multiplyMatrices(lightCamera.projectionMatrix, lightCamera.matrixWorldInverse);
+
+
+
+
 
 const camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
 camera.position.x = 8;
@@ -153,6 +186,9 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   blockShaderMaterial = new THREE.ShaderMaterial(basicShader);
 
   blockShaderMaterial.uniforms.u_texture.value = texture;
+  blockShaderMaterial.uniforms.u_shadowMap.value = sun.shadow.map.texture
+  console.log('light view matrix', lightMatrix)
+  blockShaderMaterial.uniforms.u_lightMatrix.value = lightMatrix;
 
   blockMaterial = new THREE.MeshLambertMaterial({
     map: texture,
@@ -184,28 +220,6 @@ const cubeMaterial = new THREE.MeshLambertMaterial( {color: 0x00ff00, transparen
 const newBlockPositionCube = new THREE.Mesh( cubeGeometry, cubeMaterial );
 debugScene.add( newBlockPositionCube );
 
-
-
-
-const sun = new THREE.DirectionalLight( 0xFFF2D6, 1);
-sun.position.set( 50, 50, 50);
-sun.shadow.bias = 0.0001;
-sun.castShadow = true;
-// Define the resolution of the shadow map
-sun.shadow.mapSize.width = 1024 * 2;
-sun.shadow.mapSize.height = 1024 * 2;
-// Define the visible area of the projected shadow
-sun.shadow.camera.left = -20;
-sun.shadow.camera.right = 20;
-sun.shadow.camera.top = 20;
-sun.shadow.camera.bottom = -20;
-// Set the near and far plane of the shadow camera
-sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 500;
-scene.add(sun);
-const light = new THREE.AmbientLight( 0xC4E9FF, 0.7 ); 
-scene.add( light );
-window.sun=sun;
 
 
 

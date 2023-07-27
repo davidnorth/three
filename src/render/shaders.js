@@ -33,16 +33,23 @@ export const contrastShader = {
 export const basicShader = { 
   uniforms: {
     u_texture: { type: "t", value: null },
+    u_shadowMap: { type: "t", value: null },
+    u_lightMatrix: { type: "m4", value: null },
   },
 
   vertexShader: `
     attribute float lightValue;
     varying float vLightValue;
     varying vec2 vUv;
+    varying vec4 vPosLightSpace;
+    uniform mat4 u_lightMatrix;
 
     void main() {
         vUv = uv;
         vLightValue = lightValue;
+        // Calculate vertex position in light space
+        vPosLightSpace = u_lightMatrix * modelViewMatrix * vec4(position, 1.0);
+        // Set the vertex position in the scene
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
