@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { generate } from './generator.js'
 
-export const CHUNK_WIDTH = 15;
+export const CHUNK_WIDTH = 16;
 export const CHUNK_HEIGHT = 32;
 BLOCKS_PER_CHUNK = CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_HEIGHT;
 
@@ -420,7 +420,7 @@ class Chunk {
 
     // geometry holds all faces for a chunk
     // Assign the vertex, index, and UV data to the geometry
-    // this.geometry.dispose();
+    this.geometry.dispose();
     this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
     this.geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
     this.geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));

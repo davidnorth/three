@@ -4,8 +4,7 @@ import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { contrastShader, customizeMeshLambertShader } from './shaders';
-
-export const BG_COLOR = 0x9999ff;
+import { BG_COLOR } from '../constants';
 
 class GameRenderer {
 
