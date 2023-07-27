@@ -2,7 +2,7 @@ import Simplex from 'perlin-simplex'
 const simplex = new Simplex()
 
 
-const GROUND_LEVEL = 32;
+const GROUND_LEVEL = 16;
 
 NOISE_SCALE_1 = 0.05;
 

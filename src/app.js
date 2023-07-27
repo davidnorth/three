@@ -9,7 +9,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
 import Chunk from './world/Chunk';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
-import { contrastShader, basicShader } from './render/shaders';
+import { contrastShader, customizeMeshLambertShader } from './render/shaders';
 import GUI from 'lil-gui'; 
 
 const BG_COLOR = 0x9999ff;
@@ -30,7 +30,7 @@ const hudScene = createHudScene();
 
 
 const sun = new THREE.DirectionalLight( 0xFFF2D6, 1);
-sun.position.set( 50, 50, 50);
+sun.position.set( 80, 50, 50);
 sun.shadow.bias = 0.0001;
 sun.castShadow = true;
 // Define the resolution of the shadow map
@@ -49,17 +49,9 @@ const light = new THREE.AmbientLight( 0xC4E9FF, 0.7 );
 scene.add( light );
 window.sun=sun;
 
-const lightCamera = new THREE.OrthographicCamera();
-lightCamera.position.copy(sun.position);
-lightCamera.lookAt(scene.position); 
-lightCamera.updateProjectionMatrix();
-lightCamera.updateMatrixWorld();
 
-// Now create a matrix that transforms from world space to light's clip space
-const lightMatrix = new THREE.Matrix4();
-lightMatrix.multiplyMatrices(lightCamera.projectionMatrix, lightCamera.matrixWorldInverse);
-
-
+gui.add(sun.position, 'x', -100, 100).name('sun x');
+gui.add(sun.position, 'y', -100, 100).name('sun y');
 
 
 
@@ -173,7 +165,6 @@ document.addEventListener('contextmenu', function (event) {
 )
 
 
-let blockShaderMaterial;
 
 
 
@@ -183,22 +174,17 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter;
 
-  blockShaderMaterial = new THREE.ShaderMaterial(basicShader);
-
-  blockShaderMaterial.uniforms.u_texture.value = texture;
-  blockShaderMaterial.uniforms.u_shadowMap.value = sun.shadow.map.texture
-  console.log('light view matrix', lightMatrix)
-  blockShaderMaterial.uniforms.u_lightMatrix.value = lightMatrix;
-
   blockMaterial = new THREE.MeshLambertMaterial({
     map: texture,
     wireframe: false,
   });
+  blockMaterial.onBeforeCompile = customizeMeshLambertShader;
   gui.add(blockMaterial, 'wireframe')
   const chunk = new Chunk(0,0,0)
   chunk.generateBlocks();
   chunk.generateMesh();
-  chunk.mesh.material = blockShaderMaterial;
+
+  chunk.mesh.material = blockMaterial;
   scene.add(chunk.mesh);
   defaultChunk = chunk;
 });

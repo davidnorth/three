@@ -29,43 +29,37 @@ export const contrastShader = {
 };
 
 
+    
 
-export const basicShader = { 
-  uniforms: {
-    u_texture: { type: "t", value: null },
-    u_shadowMap: { type: "t", value: null },
-    u_lightMatrix: { type: "m4", value: null },
-  },
 
-  vertexShader: `
-    attribute float lightValue;
-    varying float vLightValue;
-    varying vec2 vUv;
-    varying vec4 vPosLightSpace;
-    uniform mat4 u_lightMatrix;
 
-    void main() {
-        vUv = uv;
+
+export function customizeMeshLambertShader(shader) {
+
+  shader.vertexShader = `
+       attribute float lightValue;
+       varying float vLightValue;
+     ` + shader.vertexShader;
+
+  shader.vertexShader = shader.vertexShader.replace(
+    '#include <begin_vertex>',
+    `
+        #include <begin_vertex>
         vLightValue = lightValue;
-        // Calculate vertex position in light space
-        vPosLightSpace = u_lightMatrix * modelViewMatrix * vec4(position, 1.0);
-        // Set the vertex position in the scene
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
+      `
+  );
 
-  fragmentShader: `
+  shader.fragmentShader = `
     varying float vLightValue;
-    varying vec2 vUv;
-    uniform sampler2D u_texture;
-    void main() {
-        vec4 texColor = texture2D(u_texture, vUv);
-        texColor.rgb *= (0.1 + (vLightValue * 0.3)); // Modulate the color by the light value
-        gl_FragColor = texColor;
-    }
-  `
+  ` + shader.fragmentShader;
 
 
-        // #vec4 texColor = vec4(1.0,1.0,1.0,1.0);
-        // vec4 texColor = texture2D(u_texture, vUv);
-};
+  shader.fragmentShader = shader.fragmentShader.replace(
+    'vec4 diffuseColor = vec4( diffuse, opacity );',
+    `
+      vec4 diffuseColor = vec4( diffuse, opacity );
+      diffuseColor.rgb *= (0.1 + (vLightValue * 0.3)); 
+    `
+  );
+
+}
