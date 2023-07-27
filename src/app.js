@@ -1,25 +1,18 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-
 import { createDebugScene } from './scenes/debug';
 import { createHudScene } from './scenes/hud';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import GameRenderer from './render/GameRenderer';
+import { customizeMeshLambertShader } from './render/shaders';
 
-import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass.js';
-
-let bokehPass;
 
 import Chunk from './world/Chunk';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
-import { contrastShader, customizeMeshLambertShader } from './render/shaders';
 import GUI from 'lil-gui'; 
 
 const BG_COLOR = 0x9999ff;
 
 const gui = new GUI();
 
-THREE.ColorManagement.enabled = true;
 
 let blockMaterial;
 
@@ -112,10 +105,7 @@ function castRayFromCamera() {
     intersects[0].point
 
     // // set bokePass focus to the intersect distance
-    bokehPass.uniforms.focus.value = intersects[0].distance;
-
-    // position hitPoint sphere at the intersection point
-    hitPoint.position.copy(intersects[0].point);
+    gameRenderer.bokehPass.uniforms.focus.value = intersects[0].distance;
 
     // create a copy of the intserect point moved forward along the face normal by 0.5
     newBlockPos = intersects[0].point
@@ -139,39 +129,22 @@ function castRayFromCamera() {
     deleteBlockPos.z = Math.floor(deleteBlockPos.z);
 
 
-
-
-    newBlockPositionCube.position.copy(newBlockPos);
-
     // get the corners of the intersect face
     const normal = intersects[0].face.normal;
 
 
-  }  else {
-    hitPoint.position.set(1000, 1000, 1000);
   }
 
 }
 
 
-// handle mouse left click
-document.addEventListener('contextmenu', function (event) {
-
-//    if (newBlockPos && defaultChunk) {
-//     defaultChunk.setBlock(newBlockPos.x, newBlockPos.y, newBlockPos.z, 2)
+// // handle mouse left click
+// document.addEventListener('contextmenu', function (event) {
+//   if (deleteBlockPos && defaultChunk) {
+//     defaultChunk.setBlock(deleteBlockPos.x, deleteBlockPos.y, deleteBlockPos.z, 0)
 //     defaultChunk.generateMesh()
-//  }
-
-  if (deleteBlockPos && defaultChunk) {
-    defaultChunk.setBlock(deleteBlockPos.x, deleteBlockPos.y, deleteBlockPos.z, 0)
-    defaultChunk.generateMesh()
-  }
-
-  
-
-  
-}
-)
+//   }
+// })
 
 
 
@@ -188,8 +161,9 @@ textureLoader.load('/blocks/blocks.png', function(texture){
     wireframe: false,
   });
   blockMaterial.onBeforeCompile = customizeMeshLambertShader;
+
   gui.add(blockMaterial, 'wireframe')
-  const chunk = new Chunk(0,0,0)
+  const chunk = new Chunk(0,0,0);
   chunk.generateBlocks();
   chunk.generateMesh();
 
@@ -202,11 +176,6 @@ textureLoader.load('/blocks/blocks.png', function(texture){
 // add a small red sphere
 const geometry = new THREE.SphereGeometry( 0.1, 32, 32 );
 const material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
-const hitPoint = new THREE.Mesh( geometry, material );
-hitPoint.position.x = 8;
-hitPoint.position.y = 16;
-hitPoint.position.z = 8;
-debugScene.add( hitPoint );
 
 // a cube 1x1x1 with a semi transparent green material
 const cubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -218,79 +187,20 @@ debugScene.add( newBlockPositionCube );
 
 
 
-const renderer = new THREE.WebGLRenderer({ 
-  antialias: true,
-});
-renderer.shadowMap.enabled = true;
-renderer.setSize( window.innerWidth, window.innerHeight );
-renderer.setClearColor(BG_COLOR);
-document.body.appendChild( renderer.domElement );
+const gameRenderer = new GameRenderer({ scene, camera, debugScene, hudScene, guiCamera});
 
-const controls = new OrbitControls(camera, renderer.domElement);
+const controls = new OrbitControls(camera, gameRenderer.renderer.domElement);
 
-
-
-// Create composers for both scenes
-const mainComposer = new EffectComposer(renderer);
-const overlayComposer = new EffectComposer(renderer);
-
-// Add render pass for the main scene
-mainComposer.addPass(new RenderPass(scene, camera));
-
-bokehPass = new BokehPass(scene, camera, {
-  focus: 50,
-  aperture: 0.0003,
-  maxblur: 0.01,
-  width: window.innerWidth,
-  height: window.innerHeight
-});
-
-
-// bokehPass.renderToScreen = true;
-mainComposer.addPass(bokehPass);
-
-// Add contrast shader
-const contrastPass = new ShaderPass(contrastShader);
-contrastPass.uniforms.contrast.value = 1.0;
-mainComposer.addPass(contrastPass);
-
-
-
-
-// Add render pass for the overlay scene
-var overlayRenderPass = new RenderPass(debugScene, camera);
-overlayRenderPass.clear = false;
-overlayComposer.addPass(overlayRenderPass);
-
-var guiComposer = new EffectComposer(renderer);
-// Add render pass for the GUI scene
-var guiRenderPass = new RenderPass(hudScene, guiCamera);
-guiRenderPass.clear = false;
-guiComposer.addPass(guiRenderPass);
-
-
-gui.add(contrastPass.uniforms.contrast, 'value', 0, 2).name('contrast');
 
 
 window.debugVisible = false;
-
 gui.add(self, 'debugVisible');
 
 
 function animate() {
   requestAnimationFrame(animate);
   castRayFromCamera();
-
-  renderer.clear();
-  mainComposer.render();
-  renderer.clearDepth();
-  if(window.debugVisible) {
-    // Render the overlay scene
-    overlayComposer.render();
-    renderer.clearDepth();
-  }
-  guiComposer.render();
-
+  gameRenderer.render();
 }
 
 animate()

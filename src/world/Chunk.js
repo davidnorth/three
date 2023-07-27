@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { generate } from './generator.js'
 
-CHUNK_WIDTH = 32;
-CHUNK_HEIGHT = 64;
+export const CHUNK_WIDTH = 15;
+export const CHUNK_HEIGHT = 32;
 BLOCKS_PER_CHUNK = CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_HEIGHT;
 
 // the dimensions of the blocks texture map in blocks width and height
@@ -64,9 +64,8 @@ function uvsForTextureBlock(x, y) {
 
 class Chunk {
 
-  constructor(ox, oy, oz) {
+  constructor(ox, oz) {
     this.ox = ox;
-    this.oy = oy;
     this.oz = oz;
     this.blocks = new Uint8Array(BLOCKS_PER_CHUNK);
     this.geometry = new THREE.BufferGeometry();
@@ -122,7 +121,9 @@ class Chunk {
   }
 
   generateMesh() {
-    // TODO: Rename these removing 'Tmp'
+
+    console.time('generate_mesh')
+
     const verts = [];
     const indices = [];
     const normals = [];
@@ -130,8 +131,6 @@ class Chunk {
     const lightValues = [];
 
     let vertIndex = 0;
-
-    let side1, side2, corner;
 
     // iterate through each block in the chunk
     for (let x = 0; x < CHUNK_WIDTH; x++) {
@@ -432,6 +431,7 @@ class Chunk {
 
 
 
+    console.timeEnd('generate_mesh')
   }
 
 
