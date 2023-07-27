@@ -6,6 +6,9 @@ import { createHudScene } from './scenes/hud';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
+import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass.js';
+
+let bokehPass;
 
 import Chunk from './world/Chunk';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
@@ -67,7 +70,7 @@ guiCamera.position.z = 10;
 
 // Raycaster to find which block face we are looking at
 const raycaster = new THREE.Raycaster();
-raycaster.far = 30;
+raycaster.far = 50;
 raycaster.near = 0.1;
 
 let newBlockPos;
@@ -79,6 +82,9 @@ function castRayFromCamera() {
   // So, we create a vector for that direction and transform it to world space.
   let direction = new THREE.Vector3(0, 0, -1);
   direction.transformDirection(camera.matrixWorld);
+
+
+
   
   // Now set the raycaster to the camera's position and the calculated direction
   raycaster.set(camera.position, direction);
@@ -104,6 +110,9 @@ function castRayFromCamera() {
 
   if(intersects.length){
     intersects[0].point
+
+    // // set bokePass focus to the intersect distance
+    bokehPass.uniforms.focus.value = intersects[0].distance;
 
     // position hitPoint sphere at the intersection point
     hitPoint.position.copy(intersects[0].point);
@@ -222,15 +231,31 @@ const controls = new OrbitControls(camera, renderer.domElement);
 
 
 // Create composers for both scenes
-var mainComposer = new EffectComposer(renderer);
-var overlayComposer = new EffectComposer(renderer);
+const mainComposer = new EffectComposer(renderer);
+const overlayComposer = new EffectComposer(renderer);
 
 // Add render pass for the main scene
 mainComposer.addPass(new RenderPass(scene, camera));
+
+bokehPass = new BokehPass(scene, camera, {
+  focus: 50,
+  aperture: 0.0003,
+  maxblur: 0.01,
+  width: window.innerWidth,
+  height: window.innerHeight
+});
+
+
+// bokehPass.renderToScreen = true;
+mainComposer.addPass(bokehPass);
+
 // Add contrast shader
-var contrastPass = new ShaderPass(contrastShader);
+const contrastPass = new ShaderPass(contrastShader);
 contrastPass.uniforms.contrast.value = 1.0;
 mainComposer.addPass(contrastPass);
+
+
+
 
 // Add render pass for the overlay scene
 var overlayRenderPass = new RenderPass(debugScene, camera);

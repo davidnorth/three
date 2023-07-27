@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { generate } from './generator.js'
 
-CHUNK_WIDTH = 16;
+CHUNK_WIDTH = 32;
 CHUNK_HEIGHT = 64;
 BLOCKS_PER_CHUNK = CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_HEIGHT;
 
