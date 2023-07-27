@@ -23,13 +23,13 @@ let blockMaterial;
 let defaultChunk;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2( 0x9999F8, 0.010);
+scene.fog = new THREE.FogExp2( BG_COLOR, 0.010);
 
 const debugScene = createDebugScene();
 const hudScene = createHudScene();
 
 
-const sun = new THREE.DirectionalLight( 0xFFF2D6, 1);
+const sun = new THREE.DirectionalLight( 0xF8EC8D, 1);
 sun.position.set( 80, 50, 50);
 sun.shadow.bias = 0.0001;
 sun.castShadow = true;

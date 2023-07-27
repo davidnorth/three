@@ -57,8 +57,20 @@ export function customizeMeshLambertShader(shader) {
   shader.fragmentShader = shader.fragmentShader.replace(
     'vec4 diffuseColor = vec4( diffuse, opacity );',
     `
-      vec4 diffuseColor = vec4( diffuse, opacity );
-      diffuseColor.rgb *= (0.1 + (vLightValue * 0.3)); 
+    vec4 diffuseColor = vec4( diffuse, opacity );
+
+
+    vec3 shadowColor = vec3(0.4490, 0.6392, 1.0000); // Define your shadow color here
+
+    // vec3 shadowColor = vec3(0, 0, 1.0000); // Define your shadow color here
+
+    float shadowStrength = vLightValue / 2.0;
+
+    vec3 shadowMix = mix(shadowColor, vec3(1.0), shadowStrength);
+
+    // diffuseColor.rgb *= shadowMix;
+    diffuseColor.rgb = shadowMix;
+
     `
   );
 
