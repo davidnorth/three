@@ -30,7 +30,6 @@ class World {
   }
 
 
-  // determine which chunk this block is in
   getBlockId(x, y, z) {
     const chunkX = Math.floor(x / CHUNK_WIDTH);
     const chunkZ = Math.floor(z / CHUNK_WIDTH);
@@ -42,8 +41,6 @@ class World {
   solidAt(x, y, z) {
     return this.getBlockId(x, y, z) !== 0;
   }
-
-
 
 }
 

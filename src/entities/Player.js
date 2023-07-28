@@ -22,26 +22,22 @@ class AABB {
 
 
 class KeyInput {
-
   constructor() {
-
-    // Key state
     this.keys = {
       w: false,
       a: false,
       s: false,
-      d: false
+      d: false,
+      space: false,
     };
-
-    // Event listeners
     window.addEventListener('keydown', (event) => {
+      console.log(event.code);
       if (event.code === "KeyW") this.keys.w = true;
       if (event.code === "KeyA") this.keys.a = true;
       if (event.code === "KeyS") this.keys.s = true;
       if (event.code === "KeyD") this.keys.d = true;
       if (event.code === "Space") this.keys.space = true;
     });
-
     window.addEventListener('keyup', (event) => {
       if (event.code === "KeyW") this.keys.w = false;
       if (event.code === "KeyA") this.keys.a = false;
@@ -49,9 +45,7 @@ class KeyInput {
       if (event.code === "KeyD") this.keys.d = false;
       if (event.code === "Space") this.keys.space = false;
     });
-
   }
-
 }
 
 
@@ -95,9 +89,12 @@ class Player {
     const speed = WALK_SPEED * delta;
 
 
+    let flatDirection = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
+ 
+
     if(this.keyInput.keys.w) {
-      this.x += this.direction.x * speed;
-      this.z += this.direction.z * speed;
+      this.x += flatDirection.x * speed;
+      this.z += flatDirection.z * speed;
     }
     if(this.keyInput.keys.s) {
       this.x -= this.direction.x * speed;
@@ -111,12 +108,8 @@ class Player {
       this.x -= this.direction.z * speed;
       this.z += this.direction.x * speed;
     }
-
-
-
-    if(this.keyInput.space) {
-      // jump
-      this.yv = 1;
+    if(this.keyInput.keys.space) {
+      this.yv = 0.1;
     }
 
 
