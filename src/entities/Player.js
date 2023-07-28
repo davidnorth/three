@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';0
+
 EYE_HEIGHT = 1.5;
 BB_HEIGHT = 1.7;
 BB_WIDTH = 0.6;
@@ -13,8 +15,8 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.x = 16;
-    this.y = 24;
+    this.x = 8;
+    this.y = 60;
     this.z = 8;
     this.xv = 0;
     this.yv = 0;
@@ -22,10 +24,12 @@ class Player {
 
 
     // define a vector representing the direction the player is looking in
-    this.direction = new THREE.Vector3(-1, -1, 0);
+    this.direction = new THREE.Vector3(0, -1, 0);
 
     this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.updateCamera();
+
+    this.controls = new OrbitControls(this.camera, document.body);
 
     // Raycaster to find which block face we are looking at
     this.eyeRaycaster = new THREE.Raycaster();
@@ -39,7 +43,7 @@ class Player {
     this.x += this.xv;
     this.y += this.yv;
     this.z += this.zv;
-    this.updateCamera();
+    // this.updateCamera();
   }
 
   updateCamera() {

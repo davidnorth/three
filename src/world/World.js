@@ -12,11 +12,11 @@ class World {
 
     // The main scene that we will add chunks geometry to
     this.scene = scene;
+    window.world = this;
   }
 
   addNewChunk(x, z) {
     const chunk = new Chunk(x, z);
-    // TODO: do this async in a worker
     chunk.generateBlocks();
     chunk.generateMesh();
     this.chunks.set(this.getChunkKey(x, z), chunk);

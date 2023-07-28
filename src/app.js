@@ -33,7 +33,13 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   blockMaterial.onBeforeCompile = customizeMeshLambertShader;
   gui.add(blockMaterial, 'wireframe')
   world.blockMaterial = blockMaterial;
-  const chunk = world.addNewChunk(0, 0);
+
+  for(let x=-4; x<4; x++) {
+    for(let z=-4; z<4; z++) {
+      world.addNewChunk(x * 16, z * 16);
+    }
+  }
+
   animate()
 });
 

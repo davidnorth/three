@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import { generate } from './generator.js'
 
 export const CHUNK_WIDTH = 16;
-export const CHUNK_HEIGHT = 32;
-BLOCKS_PER_CHUNK = CHUNK_WIDTH * CHUNK_WIDTH * CHUNK_HEIGHT;
+export const CHUNK_HEIGHT = 16;
 
 // the dimensions of the blocks texture map in blocks width and height
 const TEXTURE_BLOCKS_WIDTH = 8
@@ -67,26 +66,33 @@ class Chunk {
   constructor(ox, oz) {
     this.ox = ox;
     this.oz = oz;
-    this.blocks = new Uint8Array(BLOCKS_PER_CHUNK);
+    // Extra margin of blocks in x and z
+    this.blocks = new Uint8Array((CHUNK_WIDTH+2) * (CHUNK_WIDTH+2) * CHUNK_HEIGHT);
     this.geometry = new THREE.BufferGeometry();
     this.mesh = new THREE.Mesh(this.geometry);
     this.mesh.enableRaycast = true;
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
-    this.mesh.position.x = ox * CHUNK_WIDTH
-    this.mesh.position.z = oz * CHUNK_WIDTH
+    this.mesh.position.x = ox;
+    this.mesh.position.z = oz;
+    this.mesh.position.y = 0;
+    window.chunk = this;
   }
 
   // x represents left to right, z forwards and backwards and y up and down
   // chunk is flat array of block ids that represents a 3 dimensional grid of blocks
   // this function takes x, y, z coordinates and returns the index of the block in the chunk array
+  // there is an extra margin of blocks in x and z dimensions hence the CHUNK_WIDTH+2
+  // so asking for block x=0, y=0, z=0 will return the at y=0 but inset by 1 block in x and z
   getBlockIndex(x, y, z) {
-    return x + CHUNK_WIDTH * (y + CHUNK_HEIGHT * z);
+    const WIDTH = CHUNK_WIDTH + 2;
+    // layer size * y + row size + z + x
+    return (y*WIDTH*WIDTH) + (WIDTH*(z+1)) + (x+1)
   }
 
   getBlockId(x, y, z) {
-    if(x<0 || y<0 || z<0 || x>=CHUNK_WIDTH || y>=CHUNK_HEIGHT || z>=CHUNK_WIDTH){
-      return 0;
+    if(x<-1 || y<0 || z<-1 || x>=CHUNK_WIDTH+1 || y>=CHUNK_HEIGHT || z>=CHUNK_WIDTH+1){
+      return 1;
     }
     return this.blocks[this.getBlockIndex(x, y, z)];
   }
@@ -109,15 +115,16 @@ class Chunk {
   }
 
   generateBlocks() {
-    for (let bx = 0; bx < CHUNK_WIDTH; bx++) {
+    console.time('generate_blocks')
+    for (let bx = -1; bx < CHUNK_WIDTH+1; bx++) {
       for (let by = 0; by < CHUNK_HEIGHT; by++) {
-        for (let bz = 0; bz < CHUNK_WIDTH; bz++) {
-          const blockId = generate(bx + this.ox * CHUNK_WIDTH, by, bz + this.oz * CHUNK_WIDTH);
-          // const blockId = by > 32 ? 0 : 1;
+        for (let bz = -1; bz < CHUNK_WIDTH+1; bz++) {
+          const blockId = generate(bx + this.ox, by, bz + this.oz);
           this.setBlock(bx, by, bz, blockId);
         }
       }
     }
+    console.timeEnd('generate_blocks')
   }
 
   generateMesh() {
@@ -326,13 +333,6 @@ class Chunk {
             );
             lightValues.push(vl1, vl2, vl3, vl4);
 
-
-
-
-
-
-
-
             // Set face normal left
             for (let i = 0; i < 4; i++) {
               normals.push(faceNormals.left.x, faceNormals.left.y, faceNormals.left.z);
@@ -417,6 +417,9 @@ class Chunk {
       }
     }
 
+    console.timeEnd('generate_mesh')
+
+
 
     // geometry holds all faces for a chunk
     // Assign the vertex, index, and UV data to the geometry
@@ -431,7 +434,6 @@ class Chunk {
 
 
 
-    console.timeEnd('generate_mesh')
   }
 
 

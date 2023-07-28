@@ -9,7 +9,7 @@ class MainScene extends THREE.Scene {
   constructor() {
     super();
 
-    this.fog = new THREE.FogExp2( BG_COLOR, 0.010);
+    this.fog = new THREE.FogExp2( BG_COLOR, 0.008);
     this.sun = new Sun();
     this.add(this.sun);
 
