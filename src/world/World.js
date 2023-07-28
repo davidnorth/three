@@ -15,11 +15,12 @@ class World {
     window.world = this;
   }
 
+  // x and z represent the chunks position in the grid of chunks, not the world
   addNewChunk(x, z) {
-    const chunk = new Chunk(x, z);
+    const chunk = new Chunk(x * CHUNK_WIDTH, z * CHUNK_WIDTH);
     chunk.generateBlocks();
     chunk.generateMesh();
-    this.chunks.set(this.getChunkKey(x, z), chunk);
+    this.setChunk(x, z, chunk);
     this.scene.add(chunk.mesh);
     chunk.mesh.material = this.blockMaterial;
     return chunk;
@@ -29,11 +30,22 @@ class World {
     return `${x}-${z}`;
   }
 
+  setChunk(x, z, chunk) {
+    this.chunks.set(this.getChunkKey(x, z), chunk);
+  }
+
+  getChunk(x, z) {
+    return this.chunks.get(this.getChunkKey(x, z));
+  }
+
 
   getBlockId(x, y, z) {
     const chunkX = Math.floor(x / CHUNK_WIDTH);
     const chunkZ = Math.floor(z / CHUNK_WIDTH);
-    const chunk = this.chunks.get((this.getChunkKey(chunkX, chunkZ)));
+
+    // console.log('getBlockId in chunk', chunkX, chunkZ);
+
+    const chunk = this.getChunk(chunkX, chunkZ);
     if (!chunk) return 0;
     return chunk.getBlockId(x % CHUNK_WIDTH, y, z % CHUNK_WIDTH);
   }

@@ -63,6 +63,7 @@ function uvsForTextureBlock(x, y) {
 
 class Chunk {
 
+  // ox and oz are the chunk's origin in world space
   constructor(ox, oz) {
     this.ox = ox;
     this.oz = oz;
@@ -91,7 +92,10 @@ class Chunk {
   }
 
   getBlockId(x, y, z) {
-    if(x<-1 || y<0 || z<-1 || x>=CHUNK_WIDTH+1 || y>=CHUNK_HEIGHT || z>=CHUNK_WIDTH+1){
+    if(y>= CHUNK_HEIGHT) {
+      return 0;
+    }
+    if(x<-1 || y<0 || z<-1 || x>=CHUNK_WIDTH+1 || z>=CHUNK_WIDTH+1){
       return 1;
     }
     return this.blocks[this.getBlockIndex(x, y, z)];

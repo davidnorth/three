@@ -36,10 +36,10 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   gui.add(blockMaterial, 'wireframe')
   world.blockMaterial = blockMaterial;
 
-  const RENDER_DISTANCE = 16;
+  const RENDER_DISTANCE = 10;
   for(let x=-RENDER_DISTANCE; x<RENDER_DISTANCE; x++) {
     for(let z=-RENDER_DISTANCE; z<RENDER_DISTANCE; z++) {
-      world.addNewChunk(x * 16, z * 16);
+      world.addNewChunk(x, z);
     }
   }
 
