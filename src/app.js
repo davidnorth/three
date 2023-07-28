@@ -64,7 +64,7 @@ document.addEventListener('mousemove', function (event) {
 
 
 
-window.debugVisible = false;
+window.debugVisible = true;
 gui.add(self, 'debugVisible');
 
 const clock = new THREE.Clock();

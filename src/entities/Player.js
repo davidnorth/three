@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+// import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';0
+
 const EYE_HEIGHT = 1.6;
 const BB_HEIGHT = 1.8;
 const BB_WIDTH = 0.6;
@@ -67,6 +69,8 @@ class Player {
     this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.updateCamera();
 
+    // this.controls = new OrbitControls(this.camera, document.body);
+
     // Raycaster to find which block face we are looking at
     this.eyeRaycaster = new THREE.Raycaster();
     this.eyeRaycaster.far = 50;
@@ -92,8 +96,8 @@ class Player {
       this.z += flatDirection.z * speed;
     }
     if(this.keyInput.keys.s) {
-      this.x -= this.direction.x * speed;
-      this.z -= this.direction.z * speed;
+      this.x -= flatDirection.x * speed;
+      this.z -= flatDirection.z * speed;
     }
     if(this.keyInput.keys.a) {
       this.x += this.direction.z * speed;

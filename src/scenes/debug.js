@@ -31,5 +31,10 @@ export function createDebugScene() {
   scene.add(lineZ);
 
 
+
+
+
+
+
   return scene;
 }

@@ -1,5 +1,10 @@
-import { CHUNK_WIDTH, CHUNK_HEIGHT } from "./Chunk";
+import { CHUNK_WIDTH } from "./Chunk";
 import Chunk from "./Chunk";
+
+// move to Math module
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
 
 class World {
 
@@ -27,7 +32,7 @@ class World {
   }
 
   getChunkKey(x, z) { 
-    return `${x}-${z}`;
+    return `${x}:${z}`;
   }
 
   setChunk(x, z, chunk) {
@@ -38,16 +43,34 @@ class World {
     return this.chunks.get(this.getChunkKey(x, z));
   }
 
-
+  // Get id of a block at world coordinates
   getBlockId(x, y, z) {
     const chunkX = Math.floor(x / CHUNK_WIDTH);
     const chunkZ = Math.floor(z / CHUNK_WIDTH);
 
-    // console.log('getBlockId in chunk', chunkX, chunkZ);
 
     const chunk = this.getChunk(chunkX, chunkZ);
     if (!chunk) return 0;
-    return chunk.getBlockId(x % CHUNK_WIDTH, y, z % CHUNK_WIDTH);
+    // world coordinates to chunk coordinates
+    return chunk.getBlockId(mod(x, CHUNK_WIDTH), y, mod(z, CHUNK_WIDTH));
+  }
+
+  // Get id of a block at world coordinates
+  debugGetBlockId(x, y, z) {
+    const chunkX = Math.floor(x / CHUNK_WIDTH);
+    const chunkZ = Math.floor(z / CHUNK_WIDTH);
+
+    const chunk = this.getChunk(chunkX, chunkZ);
+    if (!chunk) return 0;
+
+
+    console.log('found chunk at ', chunkX, chunkZ);
+
+    console.log('chunk coords', x % CHUNK_WIDTH, y, z % CHUNK_WIDTH)
+
+
+    // world coordinates to chunk coordinates
+    return chunk.getBlockId(mod(x, CHUNK_WIDTH), y, mod(z, CHUNK_WIDTH));
   }
 
   solidAt(x, y, z) {
