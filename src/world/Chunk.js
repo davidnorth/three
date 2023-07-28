@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { generate } from './generator.js'
 
 export const CHUNK_WIDTH = 16;
-export const CHUNK_HEIGHT = 16;
+export const CHUNK_HEIGHT = 64;
 
 // the dimensions of the blocks texture map in blocks width and height
 const TEXTURE_BLOCKS_WIDTH = 8
@@ -115,7 +115,6 @@ class Chunk {
   }
 
   generateBlocks() {
-    console.time('generate_blocks')
     for (let bx = -1; bx < CHUNK_WIDTH+1; bx++) {
       for (let by = 0; by < CHUNK_HEIGHT; by++) {
         for (let bz = -1; bz < CHUNK_WIDTH+1; bz++) {
@@ -124,12 +123,10 @@ class Chunk {
         }
       }
     }
-    console.timeEnd('generate_blocks')
   }
 
   generateMesh() {
 
-    console.time('generate_mesh')
 
     const verts = [];
     const indices = [];
@@ -417,7 +414,6 @@ class Chunk {
       }
     }
 
-    console.timeEnd('generate_mesh')
 
 
 

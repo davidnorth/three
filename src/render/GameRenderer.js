@@ -28,7 +28,7 @@ class GameRenderer {
     this.bokehPass = new BokehPass(scene, camera, {
       focus: 50,
       aperture: 0.00007,
-      maxblur: 0.01,
+      maxblur: 0.005,
       width: window.innerWidth,
       height: window.innerHeight
     });

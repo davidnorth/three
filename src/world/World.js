@@ -40,7 +40,7 @@ class World {
   }
 
   solidAt(x, y, z) {
-
+    return this.getBlockId(x, y, z) !== 0;
   }
 
 

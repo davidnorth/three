@@ -22,6 +22,8 @@ const gameRenderer = new GameRenderer({ scene, camera: player.camera, debugScene
 gui.add(scene.sun.position, 'x', -100, 100).name('sun x');
 gui.add(scene.sun.position, 'y', -100, 100).name('sun y');
 
+let pointerLock = false;
+
 const textureLoader = new THREE.TextureLoader();
 textureLoader.load('/blocks/blocks.png', function(texture){
   texture.magFilter = THREE.NearestFilter;
@@ -34,26 +36,44 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   gui.add(blockMaterial, 'wireframe')
   world.blockMaterial = blockMaterial;
 
-  for(let x=-4; x<4; x++) {
-    for(let z=-4; z<4; z++) {
+  const RENDER_DISTANCE = 16;
+  for(let x=-RENDER_DISTANCE; x<RENDER_DISTANCE; x++) {
+    for(let z=-RENDER_DISTANCE; z<RENDER_DISTANCE; z++) {
       world.addNewChunk(x * 16, z * 16);
     }
   }
 
+  // request pointer lock
+
+  gameRenderer.renderer.domElement.addEventListener('click', function(e) {
+    e.target.requestPointerLock();
+    pointerLock = true;
+  });
+
   animate()
 });
 
+
+document.addEventListener('mousemove', function (event) {
+  if (pointerLock) {
+    const dx = event.movementX || event.mozMovementX || 0;
+    const dy = event.movementY || event.mozMovementY || 0;
+    player.lookAround(dx, dy);
+  }
+});
 
 
 
 window.debugVisible = false;
 gui.add(self, 'debugVisible');
 
+const clock = new THREE.Clock();
 
 function animate() {
+  const delta = clock.getDelta(); 
   requestAnimationFrame(animate);
   // TODO: Instead update all entities
-  player.update();
+  player.update(delta);
   gameRenderer.bokehPass.uniforms.focus.value = player.eyeRayIntersectDistance;
   gameRenderer.render();
 }

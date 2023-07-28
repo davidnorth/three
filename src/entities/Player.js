@@ -1,13 +1,60 @@
 import * as THREE from 'three';
 
-import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';0
+// import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';0
 
-EYE_HEIGHT = 1.5;
-BB_HEIGHT = 1.7;
-BB_WIDTH = 0.6;
-BB_HALF_WIDTH = BB_WIDTH / 2;
+const EYE_HEIGHT = 1.6;
+const BB_HEIGHT = 1.8;
+const BB_WIDTH = 0.6;
+const BB_HALF_WIDTH = BB_WIDTH / 2;
 
-GRAVITY = 0.01;
+const MOUSE_SENSITIVITY = 0.003; 
+
+const WALK_SPEED = 4.3; // m/s
+
+const GRAVITY = 0.01;
+
+class AABB {
+  constructor(min, max) {
+    this.min = min; // a 3D vector
+    this.max = max; // a 3D vector
+  }
+}
+
+
+class KeyInput {
+
+  constructor() {
+
+    // Key state
+    this.keys = {
+      w: false,
+      a: false,
+      s: false,
+      d: false
+    };
+
+    // Event listeners
+    window.addEventListener('keydown', (event) => {
+      if (event.code === "KeyW") this.keys.w = true;
+      if (event.code === "KeyA") this.keys.a = true;
+      if (event.code === "KeyS") this.keys.s = true;
+      if (event.code === "KeyD") this.keys.d = true;
+      if (event.code === "Space") this.keys.space = true;
+    });
+
+    window.addEventListener('keyup', (event) => {
+      if (event.code === "KeyW") this.keys.w = false;
+      if (event.code === "KeyA") this.keys.a = false;
+      if (event.code === "KeyS") this.keys.s = false;
+      if (event.code === "KeyD") this.keys.d = false;
+      if (event.code === "Space") this.keys.space = false;
+    });
+
+  }
+
+}
+
+
 
 class Player {
 
@@ -15,35 +62,104 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.x = 8;
-    this.y = 60;
-    this.z = 8;
+    this.x = 8.5;
+    this.y = 20;
+    this.z = 8.5;
     this.xv = 0;
     this.yv = 0;
     this.zv = 0;
 
 
     // define a vector representing the direction the player is looking in
-    this.direction = new THREE.Vector3(0, -1, 0);
+    this.direction = new THREE.Vector3(1, 0, 0);
 
     this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
     this.updateCamera();
 
-    this.controls = new OrbitControls(this.camera, document.body);
+    // this.controls = new OrbitControls(this.camera, document.body);
 
     // Raycaster to find which block face we are looking at
     this.eyeRaycaster = new THREE.Raycaster();
     this.eyeRaycaster.far = 50;
     this.eyeRaycaster.near = 0.1;
+
+    this.keyInput = new KeyInput();
+
+    window.player = this;
   }
 
-  update() {
+  update(delta) {
     this.castEyeRay();
-    // this.yv -= GRAVITY;
-    this.x += this.xv;
+    this.yv -= GRAVITY;
+
+    const speed = WALK_SPEED * delta;
+
+
+    if(this.keyInput.keys.w) {
+      this.x += this.direction.x * speed;
+      this.z += this.direction.z * speed;
+    }
+    if(this.keyInput.keys.s) {
+      this.x -= this.direction.x * speed;
+      this.z -= this.direction.z * speed;
+    }
+    if(this.keyInput.keys.a) {
+      this.x += this.direction.z * speed;
+      this.z -= this.direction.x * speed;
+    }
+    if(this.keyInput.keys.d) {
+      this.x -= this.direction.z * speed;
+      this.z += this.direction.x * speed;
+    }
+
+
+
+    if(this.keyInput.space) {
+      // jump
+      this.yv = 1;
+    }
+
+
     this.y += this.yv;
-    this.z += this.zv;
-    // this.updateCamera();
+
+    this.doWorldCollisions();
+    this.updateCamera();
+  }
+
+
+
+
+  lookAround(dx, dy) {
+    let theta = Math.atan2(this.direction.x, this.direction.z); // Notice the switch of x and z
+    let phi = Math.acos(this.direction.y);
+
+    theta += dx * MOUSE_SENSITIVITY * -1;
+    phi -= dy * MOUSE_SENSITIVITY * -1;
+    this.direction.set(
+      Math.sin(phi) * Math.sin(theta),
+      Math.cos(phi),
+      Math.sin(phi) * Math.cos(theta)
+    );
+  }
+
+
+
+
+  // player position and block position are both in world space
+  // so we can compare them without conversion
+  // Use world.solidAt(x,y,z) together with the player AABB
+  // to determine if the player is colliding with a block
+  doWorldCollisions() {
+    // is player intersecting a solid block below? If so, adjust y to place them on top of that block in air
+    if (this.isCollidingWithWorld()) {
+      this.y = Math.floor(this.y + 1);
+      this.yv = 0;
+      while (this.isCollidingWithWorld()) {
+        console.log('push up')
+        this.y += 1;
+      }
+    }
+
   }
 
   updateCamera() {
@@ -53,17 +169,43 @@ class Player {
     this.camera.lookAt(new THREE.Vector3(this.x, this.y + EYE_HEIGHT, this.z).add(this.direction));
   }
 
-  // Calculate the AABB where the player's feed at at the center
+  // Calculate the AABB in world space, just 2 opposite corners
+  // Bottom of the AABB is at the player's feet
+  // AABB is centered on the player's x and z position
   getAABB() {
-    return {
-      x1: this.x - BB_HALF_WIDTH,
-      x2: this.x + BB_HALF_WIDTH,
-      y1: this.y,
-      y2: this.y + BB_HEIGHT,
-      z1: this.z - BB_HALF_WIDTH,
-      z2: this.z + BB_HALF_WIDTH,
-    }
+    return new AABB(
+      new THREE.Vector3(this.x - BB_HALF_WIDTH, this.y, this.z - BB_HALF_WIDTH),
+      new THREE.Vector3(this.x + BB_HALF_WIDTH, this.y + BB_HEIGHT, this.z + BB_HALF_WIDTH)
+    );
   }
+
+  isCollidingWithWorld() {
+    const AABB = this.getAABB();
+    let minCellX = Math.floor(AABB.min.x);
+    let maxCellX = Math.ceil(AABB.max.x);
+    let minCellY = Math.floor(AABB.min.y);
+    let maxCellY = Math.ceil(AABB.max.y);
+    let minCellZ = Math.floor(AABB.min.z);
+    let maxCellZ = Math.ceil(AABB.max.z);
+
+    for (let x = minCellX; x <= maxCellX; x++) {
+      for (let y = minCellY; y <= maxCellY; y++) {
+        for (let z = minCellZ; z <= maxCellZ; z++) {
+          if (this.world.solidAt(x, y, z)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+
+
+
+
+
 
   castEyeRay() {
     // The camera's viewing vector is along the negative z-axis in its local space.
