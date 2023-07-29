@@ -8,8 +8,14 @@ NOISE_SCALE_1 = 0.006;
 NOISE_SCALE_2 = 0.045;
 
 export function generate(x,y,z) {
-  return simpleHeightmap(x,y,z)
-  // return y>8 ? 0 : 1;
+  // return simpleHeightmap(x,y,z)
+
+
+  if(x > 6 && x < 10 && z > -2 && z < 2 && y ==9) {
+    return 1;
+  }
+
+  return y>8 ? 0 : 1;
   // return value > 0 ? 2 : 0;
 }
 
