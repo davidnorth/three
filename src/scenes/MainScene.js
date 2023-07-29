@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BG_COLOR } from '../constants'
+import { skyShader } from '../render/shaders';
 
 import Sun from '../lights/Sun';
 
@@ -9,7 +10,7 @@ class MainScene extends THREE.Scene {
   constructor() {
     super();
 
-    this.fog = new THREE.FogExp2( BG_COLOR, 0.004);
+    this.fog = new THREE.FogExp2( BG_COLOR, 0.008);
     this.sunLight = new Sun();
     this.add(this.sunLight);
 
@@ -29,13 +30,22 @@ class MainScene extends THREE.Scene {
 
       })
     );
-
     // calculate a position for the sun that's based on the sunLight position
     // but further away along the sunLight vector
     const sunPosition = this.sunLight.position.clone();
-    sunPosition.multiplyScalar(9);
+    sunPosition.multiplyScalar(8);
     sunLightSphere.position.copy(sunPosition);
     this.add(sunLightSphere);
+
+
+    // The sky
+    const skySphere = new THREE.Mesh(
+      new THREE.SphereGeometry(1000, 16, 16),
+      new THREE.ShaderMaterial(skyShader)
+    );
+    // turn sphere geometry inside out so we can shade the inside of the sphere
+    this.add(skySphere);
+
 
 
 

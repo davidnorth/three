@@ -1,2 +1,2 @@
 
-export const BG_COLOR = 0x9999ff;
+export const BG_COLOR = 0x90A5CA;

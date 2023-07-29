@@ -66,7 +66,7 @@ class Player {
     // define a vector representing the direction the player is looking in
     this.direction = new THREE.Vector3(1, 0, 0);
 
-    this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1200);
     this.updateCamera();
 
     // this.controls = new OrbitControls(this.camera, document.body);

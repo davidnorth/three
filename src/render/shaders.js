@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export const contrastShader = {
   uniforms: {
     "tDiffuse": { type: "t", value: null },
@@ -73,5 +75,33 @@ export function customizeMeshLambertShader(shader) {
 
     `
   );
+
+}
+
+
+export const skyShader = {
+  side: THREE.BackSide,
+  uniforms: {
+
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv;
+    void main() {
+      // 2457A2
+      // D6E4F0
+      vec3 topColor = vec3(0.012, 0.208, 0.549);
+      vec3 bottomColor = vec3(1.0, 1.0, 1.0); 
+      vec3 color = mix(bottomColor, topColor, vUv.y-0.2);
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `,
+
 
 }
