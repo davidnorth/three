@@ -1,10 +1,13 @@
 import * as THREE from 'three';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 import { contrastShader, customizeMeshLambertShader } from './shaders';
 import { BG_COLOR } from '../constants';
+
+
 
 class GameRenderer {
 
@@ -25,6 +28,13 @@ class GameRenderer {
     // Add render pass for the main scene
     this.mainComposer.addPass(new RenderPass(scene, camera));
 
+    const bloomPass = new UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.0, 0.0, 0.0 );
+    bloomPass.exposure = 2.0;
+    bloomPass.strength = 0.4;
+    bloomPass.threshold = 1.0;
+    bloomPass.radius = 0.1;
+    this.mainComposer.addPass(bloomPass);
+    
     this.bokehPass = new BokehPass(scene, camera, {
       focus: 50,
       aperture: 0.00007,

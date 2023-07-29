@@ -56,7 +56,7 @@ class Player {
     this.scene = scene;
 
     this.x = 8.5;
-    this.y = 20;
+    this.y = 10;
     this.z = 8.5;
     this.xv = 0;
     this.yv = 0;

@@ -19,8 +19,8 @@ const guiCamera = new THREE.OrthographicCamera(window.innerWidth / -2, window.in
 guiCamera.position.z = 10;
 const gameRenderer = new GameRenderer({ scene, camera: player.camera, debugScene, hudScene, guiCamera});
 
-gui.add(scene.sun.position, 'x', -100, 100).name('sun x');
-gui.add(scene.sun.position, 'y', -100, 100).name('sun y');
+gui.add(scene.sunLight.position, 'x', -100, 100).name('sun x');
+gui.add(scene.sunLight.position, 'y', -100, 100).name('sun y');
 
 let pointerLock = false;
 
@@ -36,7 +36,7 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   gui.add(blockMaterial, 'wireframe')
   world.blockMaterial = blockMaterial;
 
-  const RENDER_DISTANCE = 10;
+  const RENDER_DISTANCE = 16;
   for(let x=-RENDER_DISTANCE; x<RENDER_DISTANCE; x++) {
     for(let z=-RENDER_DISTANCE; z<RENDER_DISTANCE; z++) {
       world.addNewChunk(x, z);
