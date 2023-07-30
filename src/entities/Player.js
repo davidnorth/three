@@ -5,12 +5,14 @@ import AABB from './AABB.js';
 
 const EYE_HEIGHT = 1.6;
 const BB_HEIGHT = 1.8;
-// const BB_WIDTH = 0.6;
-const BB_WIDTH = 1.0;
+const BB_WIDTH = 0.5;
+// const BB_WIDTH = 1.0;
 
 const MOUSE_SENSITIVITY = 0.003; 
 
-const WALK_SPEED = 4.3; // m/s
+// const WALK_SPEED = 4.3; // m/s
+const WALK_SPEED = 1.0;
+
 
 const GRAVITY = 0.002;
 
@@ -50,9 +52,9 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.x = 5;
+    this.x = 5.5;
     this.y = 9;
-    this.z = -2;
+    this.z = 0;
     this.xv = 0;
     this.yv = 0;
     this.zv = 0;
@@ -103,16 +105,16 @@ class Player {
     
     const speed = WALK_SPEED * delta;
 
-    const flatDirection = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
+    const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
     const up = new THREE.Vector3(0, 1, 0);
-    const right = new THREE.Vector3().crossVectors(up, flatDirection).normalize();
+    const right = new THREE.Vector3().crossVectors(up, forward).normalize();
 
     if(this.keyInput.keys.w) {
-      this.xv = flatDirection.x * speed;
-      this.zv = flatDirection.z * speed;
+      this.xv = forward.x * speed;
+      this.zv = forward.z * speed;
     } else if(this.keyInput.keys.s) {
-      this.xv = flatDirection.x * speed * -1;
-      this.zv = flatDirection.z * speed * -1;
+      this.xv = forward.x * speed * -1;
+      this.zv = forward.z * speed * -1;
     } else if(this.keyInput.keys.a) {
       this.xv = right.x * speed;
       this.zv = -right.z * speed;
@@ -204,7 +206,7 @@ class Player {
     let proposedX = this.x + this.xv;
     if (this.isCollidingWithWorldX(this.getProposedAABB(proposedX, null, null), this.xv > 0)) {
       console.log('collide X', this.x, proposedX)
-      proposedX = this.xv > 0 ? Math.ceil(proposedX) + this.bbWidth*0.5 : Math.floor(proposedX) - this.bbWidth*0.5;
+      proposedX = this.xv > 0 ? Math.ceil(proposedX) - this.bbWidth*0.5 : Math.floor(proposedX) + this.bbWidth*0.5;
 
       let count = 0;
       while (this.isCollidingWithWorldX(this.getProposedAABB(proposedX, null, null), this.xv > 0) && count < MAX_COLLISION_CHECKS) {
@@ -216,6 +218,22 @@ class Player {
 
     }
     this.x = proposedX;
+  }
+  
+  collideZ() {
+    let proposedZ = this.z + this.zv;
+    if (this.isCollidingWithWorldZ(this.getProposedAABB(null, null, proposedZ), this.zv > 0)) {
+      console.log('collide Z')
+      proposedZ = this.zv > 0 ? Math.ceil(this.z) - this.bbDepth*0.5 : Math.floor(this.z) + this.bbDepth*0.5;
+      let count = 0;
+      while (this.isCollidingWithWorldZ(this.getProposedAABB(null, null, proposedZ), this.zv > 0) && count < MAX_COLLISION_CHECKS) {
+        proposedZ += this.zv > 0 ? -1 : 1;
+        count ++;
+      }
+      this.zv = 0;
+      console.log(' - resolve ', proposedZ);
+    }
+    this.z = proposedZ;
   }
 
   collideY() {
@@ -231,27 +249,12 @@ class Player {
     }
     this.y = proposedY;
   }
-  
-  collideZ() {
-    let proposedZ = this.z + this.zv;
-    if (this.isCollidingWithWorldZ(this.getProposedAABB(null, null, proposedZ))) {
-      proposedZ = this.zv > 0 ? Math.ceil(this.z) : Math.floor(this.z);
-      let count = 0;
-      while (this.isCollidingWithWorldZ(this.getProposedAABB(null, null, proposedZ)) && count < MAX_COLLISION_CHECKS) {
-        proposedZ += this.zv > 0 ? -1 : 1;
-        count ++;
-      }
-      this.zv = 0;
-    }
-    this.z = proposedZ;
-  }
-
 
   isCollidingWithWorldX(AABB, forward = true) {
     const minCellY = Math.floor(AABB.min.y + 0.001);
     const maxCellY = Math.floor(AABB.max.y - 0.001);
     const minCellZ = Math.floor(AABB.min.z + 0.001);
-    const maxCellZ = Math.floor(AABB.max.z + 0.001);
+    const maxCellZ = Math.floor(AABB.max.z - 0.001);
     const cellX = forward ? Math.floor(AABB.max.x - 0.001) : Math.floor(AABB.min.x);
     // Check the cells at the relevant X boundary of the AABB
     for (let y = minCellY; y <= maxCellY; y++) {
