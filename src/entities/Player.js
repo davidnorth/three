@@ -215,21 +215,27 @@ class Player {
     // Accumulate the total overlap
     let overlapX = 0;
     // Only check leading face
-    const cellX = this.velocity.x > 0 ?  Math.floor(box.max.x) : Math.floor(box.min.x);
+    const startX = Math.floor(box.min.x);
+    const endX = Math.floor(box.max.x);
     const startY = Math.floor(box.min.y);
     const endY = Math.floor(box.max.y);
     const startZ = Math.floor(box.min.z);
     const endZ = Math.floor(box.max.z);
-    for(let y = startY; y <= endY; y++) {
-      for(let z = startZ; z <= endZ; z++) {
-        if(this.world.solidAt(cellX, y, z)) {
-          box.intersect(this.world.getBlockBox(cellX, y, z));
-          overlapX += box.max.x - box.min.x;
+    for (let x = startX; x <= endX; x++) {
+      for (let y = startY; y <= endY; y++) {
+        for (let z = startZ; z <= endZ; z++) {
+          if (this.world.solidAt(x, y, z)) {
+            box.intersect(this.world.getBlockBox(x, y, z));
+            overlapX += box.max.x - box.min.x;
+          }
         }
-      }
+      };
     }
     return overlapX;
   }
+
+
+  
 
 
 
