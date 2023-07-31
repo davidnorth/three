@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { CHUNK_WIDTH } from "./Chunk";
 import Chunk from "./Chunk";
 
@@ -41,6 +42,14 @@ class World {
 
   getChunk(x, z) {
     return this.chunks.get(this.getChunkKey(x, z));
+  }
+
+  // For coliision detection purposes
+  getBlockBox(x, y, z) {
+    return new THREE.Box3(
+      new THREE.Vector3(x, y, z),
+      new THREE.Vector3(x + 1, y + 1, z + 1)
+    )
   }
 
   // Get id of a block at world coordinates

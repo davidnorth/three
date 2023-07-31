@@ -1,16 +1,17 @@
 import * as THREE from 'three';
-import AABB from './AABB.js';
 
-// import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';0
+const epsilon = 0.001;
 
 const EYE_HEIGHT = 1.6;
 const BB_HEIGHT = 1.8;
-const BB_WIDTH = 0.5;
+// const BB_WIDTH = 0.5;
+const BB_WIDTH = 1.0;
 // const BB_WIDTH = 1.0;
 
 const MOUSE_SENSITIVITY = 0.003; 
 
-const WALK_SPEED = 4.3; // m/s
+// const WALK_SPEED = 4.3; // m/s
+const WALK_SPEED = 1.0;
 
 
 const GRAVITY = 0.002;
@@ -51,12 +52,9 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.x = 0.5;
+    this.x = -1;
     this.y = 9;
-    this.z = 0.5;
-    this.xv = 0;
-    this.yv = 0;
-    this.zv = 0;
+    this.z = 2;
 
     this.bbWidth = BB_WIDTH;
     this.bbDepth = BB_WIDTH;
@@ -65,6 +63,8 @@ class Player {
 
     // define a vector representing the direction the player is looking in
     this.direction = new THREE.Vector3(1, 0, 0);
+    // direction and magnitude of current movement
+    this.velocity = new THREE.Vector3(0, 0, 0);
 
     this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1200);
     this.updateCamera();
@@ -98,52 +98,6 @@ class Player {
 
   }
 
-  update(delta) {
-    this.castEyeRay();
-    this.yv -= GRAVITY;
-    
-    const speed = WALK_SPEED * delta;
-
-    const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
-    const up = new THREE.Vector3(0, 1, 0);
-    const right = new THREE.Vector3().crossVectors(up, forward).normalize();
-
-    if(this.keyInput.keys.w) {
-      this.xv = forward.x * speed;
-      this.zv = forward.z * speed;
-    } else if(this.keyInput.keys.s) {
-      this.xv = forward.x * speed * -1;
-      this.zv = forward.z * speed * -1;
-    } else if(this.keyInput.keys.a) {
-      this.xv = right.x * speed;
-      this.zv = -right.z * speed;
-    } else  if(this.keyInput.keys.d) {
-      this.xv = right.x * speed;
-      this.zv = -right.z * speed;
-    } else {
-      this.xv = 0;
-      this.zv = 0;
-    }
-
-    if(this.keyInput.keys.space) {
-      this.yv = 0.04;
-    }
-
-
-    this.doWorldCollisions();
-
-    this.y += this.yv;
-    this.x += this.xv;
-    this.z += this.zv;
-
-    this.updateCamera();
-
-    this.bbMesh.position.set(this.x, this.y, this.z);
-  }
-
-
-
-
   lookAround(dx, dy) {
     let theta = Math.atan2(this.direction.x, this.direction.z); // Notice the switch of x and z
     let phi = Math.acos(this.direction.y);
@@ -157,6 +111,53 @@ class Player {
     );
   }
 
+  update(delta) {
+    this.castEyeRay();
+    // this.yv -= GRAVITY;
+    
+    const speed = WALK_SPEED * delta;
+
+    const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
+    const up = new THREE.Vector3(0, 1, 0);
+    const right = new THREE.Vector3().crossVectors(up, forward).normalize();
+
+    if(this.keyInput.keys.w) {
+      this.velocity.x = forward.x * speed;
+      this.velocity.z = forward.z * speed;
+    } else if(this.keyInput.keys.s) {
+      this.velocity.x = forward.x * speed * -1;
+      this.velocity.z = forward.z * speed * -1;
+    } else if(this.keyInput.keys.a) {
+      // this.xv = right.x * speed;
+      this.velocity.z = -speed;
+    } else  if(this.keyInput.keys.d) {
+      this.velocity.x = right.x * speed;
+      this.velocity.z = -right.z * speed;
+    } else {
+      this.velocity.x = 0;
+      this.velocity.z = 0;
+    }
+
+    if(this.keyInput.keys.space) {
+      this.yv = 0.04;
+    }
+
+
+    this.doWorldCollisions();
+
+    // TODO: switch to this.position and update directly with velocity
+    this.y += this.velocity.y;
+    this.x += this.velocity.x;
+    this.z += this.velocity.z;
+
+    this.updateCamera();
+
+    // TODO: Set with position.copy
+    this.bbMesh.position.set(this.x, this.y, this.z);
+  }
+
+
+
 
   updateCamera() {
     this.camera.position.x = this.x;
@@ -164,25 +165,28 @@ class Player {
     this.camera.position.z = this.z;
     this.camera.lookAt(new THREE.Vector3(this.x, this.y + EYE_HEIGHT, this.z).add(this.direction));
 
-    // // to view BB mesh from behind in x
-    // this.camera.position.x = this.x - 4;
-    // this.camera.position.y = this.y + 1;
-    // this.camera.position.z = this.z;
-    // // this.camera.lookAt(new THREE.Vector3(this.x, this.y, this.z));
+    // to view BB mesh from behind in x
+    this.camera.position.x = this.x;
+    this.camera.position.y = this.y + 6;
+    this.camera.position.z = this.z;
+    this.camera.lookAt(new THREE.Vector3(this.x, this.y, this.z));
 
   }
 
-  getAABB() {
-    return new AABB(this);
-  }
-
-  getProposedAABB(proposedX, proposedY, proposedZ) {
-    const proposedPosition = new THREE.Vector3(
-      proposedX === null ? this.x : proposedX,
-      proposedY === null ? this.y : proposedY,
-      proposedZ === null ? this.z : proposedZ
-    );
-    return new AABB(this, proposedPosition);
+  getBox(proposedPos) {
+    const pos = proposedPos || new THREE.Vector3(this.x, this.y, this.z);
+    return new THREE.Box3(
+      new THREE.Vector3(
+        pos.x - this.bbWidth * 0.5,
+        pos.y,
+        pos.z - this.bbDepth * 0.5
+      ),
+      new THREE.Vector3(
+        pos.x + this.bbWidth * 0.5,
+        pos.y + this.bbHeight,
+        pos.z + this.bbDepth * 0.5
+      )
+    )
   }
 
   // player position and block position are both in world space
@@ -190,115 +194,44 @@ class Player {
   // Use world.solidAt(x,y,z) together with the player AABB
   // to determine if the player is colliding with a block
   doWorldCollisions() {
-    const velocities = [
-      {value: Math.abs(this.xv), method: this.collideX.bind(this)},
-      {value: Math.abs(this.yv), method: this.collideY.bind(this)},
-      {value: Math.abs(this.zv), method: this.collideZ.bind(this)}
-    ];
-    velocities.sort((a, b) => b.value - a.value);
-    for(let i = 0; i < velocities.length; i++) {
-      velocities[i].method();
+    this.proposedPosition = new THREE.Vector3(
+      this.x + this.velocity.x,
+      this.y + this.velocity.y,
+      this.z + this.velocity.z
+    );
+
+    let overlapX = this.calculateOverlapX();
+    if(overlapX !== 0) {
+      console.log(overlapX);
+      this.proposedPosition.x -= overlapX;
+      this.velocity.x = 0;
     }
   }
 
-  collideX() {
-    let proposedX = this.x + this.xv;
-    if (this.isCollidingWithWorldX(this.getProposedAABB(proposedX, null, null), this.xv > 0)) {
-      console.log('collide X');
-      proposedX = this.xv > 0 ? Math.ceil(proposedX) - this.bbWidth*0.5 : Math.floor(proposedX) + this.bbWidth*0.5;
-      let count = 0;
-      while (this.isCollidingWithWorldX(this.getProposedAABB(proposedX, null, null), this.xv > 0) && count < MAX_COLLISION_CHECKS) {
-        proposedX += this.xv >= 0 ? -1 : 1;
-        count ++;
-      }
-      this.xv = 0;
-
-    }
-    this.x = proposedX;
-  }
-  
-  collideZ() {
-    let proposedZ = this.z + this.zv;
-    if (this.isCollidingWithWorldZ(this.getProposedAABB(null, null, proposedZ), this.zv > 0)) {
-      console.log('collide Z');
-      proposedZ = this.zv > 0 ? Math.ceil(this.z) - this.bbDepth*0.5 : Math.floor(this.z) + this.bbDepth*0.5;
-      let count = 0;
-      while (this.isCollidingWithWorldZ(this.getProposedAABB(null, null, proposedZ), this.zv > 0) && count < MAX_COLLISION_CHECKS) {
-        proposedZ += this.zv > 0 ? -1 : 1;
-        count ++;
-      }
-      this.zv = 0;
-    }
-    this.z = proposedZ;
-  }
-
-  collideY() {
-    let proposedY = this.y + this.yv;
-    if (this.isCollidingWithWorldY(this.getProposedAABB(null, proposedY, null), this.yv > 0)) {
-      if(this.yv > 0){
-        console.log('collide Y up ');
-      }
-      proposedY = this.yv > 0 ? Math.ceil(proposedY) - this.bbHeight + 1 : Math.floor(proposedY);
-      let count = 0;
-      while (this.isCollidingWithWorldY(this.getProposedAABB(null, proposedY, null), this.yv > 0) && count < MAX_COLLISION_CHECKS) {
-        proposedY += this.yv > 0 ? -1 : 1;
-        count ++;
-      }
-      this.yv = 0;
-    }
-    this.y = proposedY;
-  }
-
-  isCollidingWithWorldX(AABB, forward = true) {
-    const minCellY = Math.floor(AABB.min.y + 0.001);
-    const maxCellY = Math.floor(AABB.max.y - 0.001);
-    const minCellZ = Math.floor(AABB.min.z + 0.001);
-    const maxCellZ = Math.floor(AABB.max.z - 0.001);
-    const cellX = forward ? Math.floor(AABB.max.x - 0.001) : Math.floor(AABB.min.x);
-    // Check the cells at the relevant X boundary of the AABB
-    for (let y = minCellY; y <= maxCellY; y++) {
-      for (let z = minCellZ; z <= maxCellZ; z++) {
-        if (this.world.solidAt(cellX, y, z)) {
-          return true;
+  // Calculates the penetration of the player's AABB into any blocks
+  // in the X axis only
+  calculateOverlapX() {
+    const box = this.getBox(this.proposedPosition);
+    // Accumulate the total overlap
+    let overlapX = 0;
+    // Only check leading face
+    const cellX = this.velocity.x > 0 ?  Math.floor(box.max.x) : Math.floor(box.min.x);
+    const startY = Math.floor(box.min.y);
+    const endY = Math.floor(box.max.y);
+    const startZ = Math.floor(box.min.z);
+    const endZ = Math.floor(box.max.z);
+    for(let y = startY; y <= endY; y++) {
+      for(let z = startZ; z <= endZ; z++) {
+        if(this.world.solidAt(cellX, y, z)) {
+          box.intersect(this.world.getBlockBox(cellX, y, z));
+          overlapX += box.max.x - box.min.x;
         }
       }
     }
-    return false;
+    return overlapX;
   }
 
-  isCollidingWithWorldY(AABB, upward = true) {
-    const minCellX = Math.floor(AABB.min.x + 0.001);
-    const maxCellX = Math.floor(AABB.max.x - 0.001);
-    const minCellZ = Math.floor(AABB.min.z + 0.001);
-    const maxCellZ = Math.floor(AABB.max.z - 0.001);
-    const cellY = upward ? Math.floor(AABB.max.y - 0.001) : Math.floor(AABB.min.y);
-    // Check the cells at the relevant Y boundary of the AABB
-    for (let x = minCellX; x <= maxCellX; x++) {
-      for (let z = minCellZ; z <= maxCellZ; z++) {
-        if (this.world.solidAt(x, cellY, z)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
 
-  isCollidingWithWorldZ(AABB, forward = true) {
-    const minCellX = Math.floor(AABB.min.x + 0.001);
-    const maxCellX = Math.floor(AABB.max.x - 0.001);
-    const minCellY = Math.floor(AABB.min.y + 0.001);
-    const maxCellY = Math.floor(AABB.max.y - 0.001);
-    const cellZ = forward ? Math.floor(AABB.max.z - 0.001) : Math.floor(AABB.min.z);
-    // Check the cells at the relevant Z boundary of the AABB
-    for (let x = minCellX; x <= maxCellX; x++) {
-      for (let y = minCellY; y <= maxCellY; y++) {
-        if (this.world.solidAt(x, y, cellZ)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
 
   castEyeRay() {
     // The camera's viewing vector is along the negative z-axis in its local space.
