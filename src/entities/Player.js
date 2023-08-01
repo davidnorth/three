@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 
+function round(number, precision) {
+  return +number.toFixed(precision)
+}
+
 const epsilon = 0.001;
 
 const EYE_HEIGHT = 1.6;
@@ -10,8 +14,8 @@ const BB_WIDTH = 1.0;
 
 const MOUSE_SENSITIVITY = 0.003; 
 
-// const WALK_SPEED = 4.3; // m/s
-const WALK_SPEED = 1.0;
+const WALK_SPEED = 4.3; // m/s
+// const WALK_SPEED = 1.0;
 
 
 const GRAVITY = 0.002;
@@ -53,7 +57,7 @@ class Player {
     this.scene = scene;
 
     this.x = -1;
-    this.y = 9;
+    this.y = 11;
     this.z = 2;
 
     this.bbWidth = BB_WIDTH;
@@ -62,7 +66,7 @@ class Player {
 
 
     // define a vector representing the direction the player is looking in
-    this.direction = new THREE.Vector3(1, 0, 0);
+    this.direction = new THREE.Vector3(0, 0, 1);
     // direction and magnitude of current movement
     this.velocity = new THREE.Vector3(0, 0, 0);
 
@@ -113,9 +117,9 @@ class Player {
 
   update(delta) {
     this.castEyeRay();
-    // this.yv -= GRAVITY;
+    // this.velocity.y -= GRAVITY;
     
-    const speed = WALK_SPEED * delta;
+    const speed = 0.05;
 
     const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
     const up = new THREE.Vector3(0, 1, 0);
@@ -139,7 +143,7 @@ class Player {
     }
 
     if(this.keyInput.keys.space) {
-      this.yv = 0.04;
+      this.velocity.y = 0.04;
     }
 
 
@@ -165,11 +169,11 @@ class Player {
     this.camera.position.z = this.z;
     this.camera.lookAt(new THREE.Vector3(this.x, this.y + EYE_HEIGHT, this.z).add(this.direction));
 
-    // to view BB mesh from behind in x
-    this.camera.position.x = this.x;
-    this.camera.position.y = this.y + 6;
-    this.camera.position.z = this.z;
-    this.camera.lookAt(new THREE.Vector3(this.x, this.y, this.z));
+    // // to view BB mesh from behind in x
+    // this.camera.position.x = this.x;
+    // this.camera.position.y = this.y + 6;
+    // this.camera.position.z = this.z;
+    // this.camera.lookAt(new THREE.Vector3(this.x, this.y, this.z));
 
   }
 
@@ -177,14 +181,14 @@ class Player {
     const pos = proposedPos || new THREE.Vector3(this.x, this.y, this.z);
     return new THREE.Box3(
       new THREE.Vector3(
-        pos.x - this.bbWidth * 0.5,
-        pos.y,
-        pos.z - this.bbDepth * 0.5
+        round(pos.x - this.bbWidth * 0.5, 2),
+        round(pos.y, 2),
+        round(pos.z - this.bbDepth * 0.5, 2)
       ),
       new THREE.Vector3(
-        pos.x + this.bbWidth * 0.5,
-        pos.y + this.bbHeight,
-        pos.z + this.bbDepth * 0.5
+        round(pos.x + this.bbWidth * 0.5, 2),
+        round(pos.y + this.bbHeight, 2),
+        round(pos.z + this.bbDepth * 0.5, 2)
       )
     )
   }
@@ -195,43 +199,99 @@ class Player {
   // to determine if the player is colliding with a block
   doWorldCollisions() {
     this.proposedPosition = new THREE.Vector3(
-      this.x + this.velocity.x,
-      this.y + this.velocity.y,
-      this.z + this.velocity.z
+      round(this.x + this.velocity.x, 2),
+      round(this.y + this.velocity.y, 2),
+      round(this.z + this.velocity.z, 2)
     );
 
-    let overlapX = this.calculateOverlapX();
-    if(overlapX !== 0) {
-      console.log(overlapX);
-      this.proposedPosition.x -= overlapX;
-      this.velocity.x = 0;
+    let overlaps = this.calculateOverlaps();
+    if (overlaps.x.total <= 0 && overlaps.y.total <= 0 && overlaps.z.total <= 0) {
+      return;
     }
+
+    console.log('collide')
+    console.log(this.proposedPosition);
+    console.log(this.getBox(this.proposedPosition));
+
+    for(let i=0;i<3;i++) {
+    overlaps = this.calculateOverlaps();
+
+    overlaps.x.total += epsilon;
+    overlaps.y.total += epsilon;
+    overlaps.z.total += epsilon;
+
+
+    if (overlaps.x.total <= 0 && overlaps.y.total <= 0 && overlaps.z.total <= 0) {
+      continue;
+    }
+
+    let sortedOverlaps = Object.keys(overlaps)
+      .map((k) => ({axis: k, min: overlaps[k].min, total: overlaps[k].total}))
+      .sort((a, b) => Math.abs(a.total) - Math.abs(b.total))
+      .filter((overlap) => Math.abs(overlap.total) > 0);
+      if (sortedOverlaps.length) {
+        const axis = sortedOverlaps[0].axis;
+        if(this.velocity[sortedOverlaps[0].axis] > 0)  {
+          console.log('subtracting', axis)
+          this.proposedPosition[sortedOverlaps[0].axis] = Math.floor(this.proposedPosition[axis]) + this.bbWidth * 0.5;
+        } else if(this.velocity[sortedOverlaps[0].axis] < 0) {
+          console.log('adding', axis)
+          if(axis === 'y') {
+            this.proposedPosition[sortedOverlaps[0].axis] = Math.ceil(this.proposedPosition.y);
+          } else {
+            this.proposedPosition[sortedOverlaps[0].axis] = Math.floor(this.proposedPosition[axis]) + this.bbWidth*0.5;
+          }
+          this.velocity[axis] = 0;
+        }
+      }
+    }
+
+
+
+    // TODO: copy to this.position
+    this.x = this.proposedPosition.x;
+    this.y = this.proposedPosition.y;
+    this.z = this.proposedPosition.z;
+
   }
 
-  // Calculates the penetration of the player's AABB into any blocks
-  // in the X axis only
-  calculateOverlapX() {
-    const box = this.getBox(this.proposedPosition);
-    // Accumulate the total overlap
-    let overlapX = 0;
-    // Only check leading face
-    const startX = Math.floor(box.min.x);
-    const endX = Math.floor(box.max.x);
-    const startY = Math.floor(box.min.y);
-    const endY = Math.floor(box.max.y);
-    const startZ = Math.floor(box.min.z);
-    const endZ = Math.floor(box.max.z);
+  calculateOverlaps() {
+    let box = this.getBox(this.proposedPosition);
+
+    const overlaps = {
+      x: { total: 0, min: 9 },
+      y: { total: 0, min: 9 },
+      z: { total: 0, min: 9 }
+    }
+
+    const startX = Math.floor(box.min.x + epsilon);
+    const endX = Math.floor(box.max.x - epsilon);
+    const startY = Math.floor(box.min.y + epsilon);
+    const endY = Math.floor(box.max.y - epsilon);
+    const startZ = Math.floor(box.min.z + epsilon);
+    const endZ = Math.floor(box.max.z - epsilon);
     for (let x = startX; x <= endX; x++) {
       for (let y = startY; y <= endY; y++) {
         for (let z = startZ; z <= endZ; z++) {
           if (this.world.solidAt(x, y, z)) {
+            // box is mutated by intersect so we need to get a fresh one for each world block we check
+            box = this.getBox(); 
             box.intersect(this.world.getBlockBox(x, y, z));
-            overlapX += box.max.x - box.min.x;
+
+            overlaps.x.total += box.max.x - box.min.x;
+            overlaps.x.min = Math.min(overlaps.x.min, Math.abs(box.max.x - box.min.x));
+
+            overlaps.y.total += box.max.y - box.min.y;
+            overlaps.y.min = Math.min(overlaps.y.min, Math.abs(box.max.y - box.min.y));
+
+            overlaps.z.total += box.max.z - box.min.z;
+            overlaps.z.min = Math.min(overlaps.z.min, Math.abs(box.max.z - box.min.z));
+
           }
         }
       };
     }
-    return overlapX;
+    return overlaps;
   }
 
 
