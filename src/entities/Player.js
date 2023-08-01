@@ -57,7 +57,7 @@ class Player {
     this.scene = scene;
 
     this.x = -1;
-    this.y = 20;
+    this.y = 100;
     this.z = 2;
 
     this.bbWidth = BB_WIDTH;
@@ -66,7 +66,7 @@ class Player {
 
 
     // define a vector representing the direction the player is looking in
-    this.direction = new THREE.Vector3(0, 0, 1);
+    this.direction = new THREE.Vector3(0, -1, 0);
     // direction and magnitude of current movement
     this.velocity = new THREE.Vector3(0, 0, 0);
 
@@ -117,7 +117,7 @@ class Player {
 
   update(delta) {
     this.castEyeRay();
-    this.velocity.y -= GRAVITY;
+    // this.velocity.y -= GRAVITY;
     
     const speed = 0.05;
 

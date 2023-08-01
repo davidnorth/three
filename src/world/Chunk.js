@@ -118,17 +118,6 @@ class Chunk {
     this.blocks[this.getBlockIndex(x, y, z)] = blockId;
   }
 
-  generateBlocks() {
-    for (let bx = -1; bx < CHUNK_WIDTH+1; bx++) {
-      for (let by = 0; by < CHUNK_HEIGHT; by++) {
-        for (let bz = -1; bz < CHUNK_WIDTH+1; bz++) {
-          const blockId = generate(bx + this.ox, by, bz + this.oz);
-          this.setBlock(bx, by, bz, blockId);
-        }
-      }
-    }
-  }
-
   generateMesh() {
 
 

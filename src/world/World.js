@@ -16,6 +16,19 @@ class World {
     // is the x position of the chunk's origin and the 2nd is the z position
     this.chunks = new Map();
 
+    this.chunkGenerationWorker = new Worker(
+      new URL('../workers/generateChunk.js', import.meta.url),
+      { type: 'module' }
+    );
+
+    this.chunkGenerationWorker.onmessage = ({data: {key, buffer}}) => {
+      const chunk = this.chunks.get(key);
+      chunk.blocks = new Uint8Array(buffer);
+      chunk.generateMesh();
+      chunk.mesh.material = this.blockMaterial;
+      this.scene.add(chunk.mesh);
+    };
+
     // The main scene that we will add chunks geometry to
     this.scene = scene;
     window.world = this;
@@ -24,12 +37,8 @@ class World {
   // x and z represent the chunks position in the grid of chunks, not the world
   addNewChunk(x, z) {
     const chunk = new Chunk(x * CHUNK_WIDTH, z * CHUNK_WIDTH);
-    chunk.generateBlocks();
-    chunk.generateMesh();
     this.setChunk(x, z, chunk);
-    this.scene.add(chunk.mesh);
-    chunk.mesh.material = this.blockMaterial;
-    return chunk;
+    this.chunkGenerationWorker.postMessage({ key: this.getChunkKey(x, z), x: chunk.ox, z: chunk.oz })
   }
 
   getChunkKey(x, z) { 

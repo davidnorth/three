@@ -18,8 +18,6 @@ export function generate(x,y,z) {
   // return value > 0 ? 2 : 0;
 }
 
-window.noise = simplex.noise;
-
 function simpleHeightmap(x,y,z) {
 
   let elevationScale = (simplex.noise(x * NOISE_SCALE_1, z * NOISE_SCALE_1) +1 ) * 0.5;
