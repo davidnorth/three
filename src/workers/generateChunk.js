@@ -17,7 +17,7 @@ self.onmessage = function({data: {key, x, z}}) {
   for (let by = 0; by < CHUNK_HEIGHT; by++) {
     for (let bz = -1; bz < CHUNK_WIDTH+1; bz++) {
       for (let bx = -1; bx < CHUNK_WIDTH+1; bx++) {
-        const blockId = generate(bx + x, by, bz + z);
+        const blockId = generate(x + bx, by, z + bz);
         const index = getBlockIndex(bx, by, bz);
         uint8View[index] = blockId;
       }

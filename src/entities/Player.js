@@ -57,7 +57,7 @@ class Player {
     this.scene = scene;
 
     this.x = -1;
-    this.y = 100;
+    this.y = 35;
     this.z = 2;
 
     this.bbWidth = BB_WIDTH;
@@ -117,7 +117,7 @@ class Player {
 
   update(delta) {
     this.castEyeRay();
-    // this.velocity.y -= GRAVITY;
+    this.velocity.y -= GRAVITY;
     
     const speed = 0.05;
 
