@@ -18,7 +18,7 @@ const WALK_SPEED = 4.3; // m/s
 // const WALK_SPEED = 1.0;
 
 
-const GRAVITY = 0.002;
+const GRAVITY = 0.003;
 
 const MAX_COLLISION_CHECKS = 2;
 
@@ -57,7 +57,7 @@ class Player {
     this.scene = scene;
 
     this.x = -1;
-    this.y = 11;
+    this.y = 20;
     this.z = 2;
 
     this.bbWidth = BB_WIDTH;
@@ -95,7 +95,7 @@ class Player {
         wireframe: true,
       })
     );
-    this.scene.add(this.bbMesh);
+    // this.scene.add(this.bbMesh);
 
 
 
@@ -117,7 +117,7 @@ class Player {
 
   update(delta) {
     this.castEyeRay();
-    // this.velocity.y -= GRAVITY;
+    this.velocity.y -= GRAVITY;
     
     const speed = 0.05;
 
@@ -143,7 +143,7 @@ class Player {
     }
 
     if(this.keyInput.keys.space) {
-      this.velocity.y = 0.04;
+      this.velocity.y = 0.06;
     }
 
 
@@ -209,21 +209,19 @@ class Player {
       return;
     }
 
-    console.log('collide')
-    console.log(this.proposedPosition);
-    console.log(this.getBox(this.proposedPosition));
 
     for(let i=0;i<3;i++) {
     overlaps = this.calculateOverlaps();
+
+    if (overlaps.x.total <= 0 && overlaps.y.total <= 0 && overlaps.z.total <= 0) {
+      continue;
+    }
 
     overlaps.x.total += epsilon;
     overlaps.y.total += epsilon;
     overlaps.z.total += epsilon;
 
 
-    if (overlaps.x.total <= 0 && overlaps.y.total <= 0 && overlaps.z.total <= 0) {
-      continue;
-    }
 
     let sortedOverlaps = Object.keys(overlaps)
       .map((k) => ({axis: k, min: overlaps[k].min, total: overlaps[k].total}))
@@ -232,10 +230,8 @@ class Player {
       if (sortedOverlaps.length) {
         const axis = sortedOverlaps[0].axis;
         if(this.velocity[sortedOverlaps[0].axis] > 0)  {
-          console.log('subtracting', axis)
           this.proposedPosition[sortedOverlaps[0].axis] = Math.floor(this.proposedPosition[axis]) + this.bbWidth * 0.5;
         } else if(this.velocity[sortedOverlaps[0].axis] < 0) {
-          console.log('adding', axis)
           if(axis === 'y') {
             this.proposedPosition[sortedOverlaps[0].axis] = Math.ceil(this.proposedPosition.y);
           } else {

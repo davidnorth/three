@@ -8,7 +8,7 @@ NOISE_SCALE_1 = 0.006;
 NOISE_SCALE_2 = 0.045;
 
 export function generate(x,y,z) {
-  // return simpleHeightmap(x,y,z)
+  return simpleHeightmap(x,y,z)
 
   if((x % 10 === 0 || z % 10 === 0) && y === 9) {
     return 1;
