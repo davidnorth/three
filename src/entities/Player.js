@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import KeyInput from '../utility/KeyInput';
+
+const RENDER_DISTANCE = 1;
 
 function round(number, precision) {
   return +number.toFixed(precision)
@@ -12,7 +15,7 @@ const BB_HEIGHT = 1.8;
 const BB_WIDTH = 1.0;
 // const BB_WIDTH = 1.0;
 
-const MOUSE_SENSITIVITY = 0.003; 
+const MOUSE_SENSITIVITY = 0.003;
 
 const WALK_SPEED = 4.3; // m/s
 // const WALK_SPEED = 1.0;
@@ -22,32 +25,6 @@ const GRAVITY = 0.003;
 
 const MAX_COLLISION_CHECKS = 2;
 
-class KeyInput {
-  constructor() {
-    this.keys = {
-      w: false,
-      a: false,
-      s: false,
-      d: false,
-      space: false,
-    };
-    window.addEventListener('keydown', (event) => {
-      if (event.code === "KeyW") this.keys.w = true;
-      if (event.code === "KeyA") this.keys.a = true;
-      if (event.code === "KeyS") this.keys.s = true;
-      if (event.code === "KeyD") this.keys.d = true;
-      if (event.code === "Space") this.keys.space = true;
-    });
-    window.addEventListener('keyup', (event) => {
-      if (event.code === "KeyW") this.keys.w = false;
-      if (event.code === "KeyA") this.keys.a = false;
-      if (event.code === "KeyS") this.keys.s = false;
-      if (event.code === "KeyD") this.keys.d = false;
-      if (event.code === "Space") this.keys.space = false;
-    });
-  }
-}
-
 
 
 class Player {
@@ -56,14 +33,11 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.x = -1;
-    this.y = 35;
-    this.z = 2;
+    this.position = new THREE.Vector3(0, 25, 0);
 
     this.bbWidth = BB_WIDTH;
     this.bbDepth = BB_WIDTH;
     this.bbHeight = BB_HEIGHT;
-
 
     // define a vector representing the direction the player is looking in
     this.direction = new THREE.Vector3(0, -1, 0);
@@ -98,8 +72,16 @@ class Player {
     // this.scene.add(this.bbMesh);
 
 
+    // Set initial render box
+    this.updateRenderBox();
+  }
 
-
+  // Recenter a box on the player's position
+  updateRenderBox() {
+    this.renderBox = new THREE.Box2(
+      new THREE.Vector2(this.position.x - RENDER_DISTANCE, this.position.z - RENDER_DISTANCE),
+      new THREE.Vector2(this.position.x + RENDER_DISTANCE, this.position.z + RENDER_DISTANCE)
+    )
   }
 
   lookAround(dx, dy) {
@@ -118,56 +100,49 @@ class Player {
   update(delta) {
     this.castEyeRay();
     this.velocity.y -= GRAVITY;
-    
-    const speed = 0.05;
+    this.doInputs();
+    this.doWorldCollisions();
+    this.position.add(this.velocity);
+    this.updateCamera();
 
+    this.bbMesh.position.copy(this.position);
+  }
+
+  doInputs() {
+
+    const speed = 0.05;
     const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
     const up = new THREE.Vector3(0, 1, 0);
     const right = new THREE.Vector3().crossVectors(up, forward).normalize();
-
-    if(this.keyInput.keys.w) {
+    if (this.keyInput.keys.w) {
       this.velocity.x = forward.x * speed;
       this.velocity.z = forward.z * speed;
-    } else if(this.keyInput.keys.s) {
+    } else if (this.keyInput.keys.s) {
       this.velocity.x = forward.x * speed * -1;
       this.velocity.z = forward.z * speed * -1;
-    } else if(this.keyInput.keys.a) {
-      // this.xv = right.x * speed;
+    } else if (this.keyInput.keys.a) {
       this.velocity.z = -speed;
-    } else  if(this.keyInput.keys.d) {
+    } else if (this.keyInput.keys.d) {
       this.velocity.x = right.x * speed;
       this.velocity.z = -right.z * speed;
     } else {
       this.velocity.x = 0;
       this.velocity.z = 0;
     }
-
-    if(this.keyInput.keys.space) {
+    if (this.keyInput.keys.space) {
       this.velocity.y = 0.06;
     }
 
-
-    this.doWorldCollisions();
-
-    // TODO: switch to this.position and update directly with velocity
-    this.y += this.velocity.y;
-    this.x += this.velocity.x;
-    this.z += this.velocity.z;
-
-    this.updateCamera();
-
-    // TODO: Set with position.copy
-    this.bbMesh.position.set(this.x, this.y, this.z);
   }
 
 
 
 
   updateCamera() {
-    this.camera.position.x = this.x;
-    this.camera.position.y = this.y + EYE_HEIGHT;
-    this.camera.position.z = this.z;
-    this.camera.lookAt(new THREE.Vector3(this.x, this.y + EYE_HEIGHT, this.z).add(this.direction));
+    this.camera.position.x = this.position.x;
+    this.camera.position.y = this.position.y + EYE_HEIGHT;
+    this.camera.position.z = this.position.z;
+    this.camera.lookAt(new THREE.Vector3(this.position.x, this.position.y + EYE_HEIGHT, this.position.z).add(this.direction));
 
     // // to view BB mesh from behind in x
     // this.camera.position.x = this.x;
@@ -178,7 +153,7 @@ class Player {
   }
 
   getBox(proposedPos) {
-    const pos = proposedPos || new THREE.Vector3(this.x, this.y, this.z);
+    const pos = proposedPos || this.position;
     return new THREE.Box3(
       new THREE.Vector3(
         round(pos.x - this.bbWidth * 0.5, 2),
@@ -199,9 +174,9 @@ class Player {
   // to determine if the player is colliding with a block
   doWorldCollisions() {
     this.proposedPosition = new THREE.Vector3(
-      round(this.x + this.velocity.x, 2),
-      round(this.y + this.velocity.y, 2),
-      round(this.z + this.velocity.z, 2)
+      round(this.position.x + this.velocity.x, 2),
+      round(this.position.y + this.velocity.y, 2),
+      round(this.position.z + this.velocity.z, 2)
     );
 
     let overlaps = this.calculateOverlaps();
@@ -210,45 +185,39 @@ class Player {
     }
 
 
-    for(let i=0;i<3;i++) {
-    overlaps = this.calculateOverlaps();
+    for (let i = 0; i < 3; i++) {
+      overlaps = this.calculateOverlaps();
 
-    if (overlaps.x.total <= 0 && overlaps.y.total <= 0 && overlaps.z.total <= 0) {
-      continue;
-    }
+      if (overlaps.x.total <= 0 && overlaps.y.total <= 0 && overlaps.z.total <= 0) {
+        continue;
+      }
 
-    overlaps.x.total += epsilon;
-    overlaps.y.total += epsilon;
-    overlaps.z.total += epsilon;
+      overlaps.x.total += epsilon;
+      overlaps.y.total += epsilon;
+      overlaps.z.total += epsilon;
 
 
 
-    let sortedOverlaps = Object.keys(overlaps)
-      .map((k) => ({axis: k, min: overlaps[k].min, total: overlaps[k].total}))
-      .sort((a, b) => Math.abs(a.total) - Math.abs(b.total))
-      .filter((overlap) => Math.abs(overlap.total) > 0);
+      let sortedOverlaps = Object.keys(overlaps)
+        .map((k) => ({ axis: k, min: overlaps[k].min, total: overlaps[k].total }))
+        .sort((a, b) => Math.abs(a.total) - Math.abs(b.total))
+        .filter((overlap) => Math.abs(overlap.total) > 0);
       if (sortedOverlaps.length) {
         const axis = sortedOverlaps[0].axis;
-        if(this.velocity[sortedOverlaps[0].axis] > 0)  {
+        if (this.velocity[sortedOverlaps[0].axis] > 0) {
           this.proposedPosition[sortedOverlaps[0].axis] = Math.floor(this.proposedPosition[axis]) + this.bbWidth * 0.5;
-        } else if(this.velocity[sortedOverlaps[0].axis] < 0) {
-          if(axis === 'y') {
+        } else if (this.velocity[sortedOverlaps[0].axis] < 0) {
+          if (axis === 'y') {
             this.proposedPosition[sortedOverlaps[0].axis] = Math.ceil(this.proposedPosition.y);
           } else {
-            this.proposedPosition[sortedOverlaps[0].axis] = Math.floor(this.proposedPosition[axis]) + this.bbWidth*0.5;
+            this.proposedPosition[sortedOverlaps[0].axis] = Math.floor(this.proposedPosition[axis]) + this.bbWidth * 0.5;
           }
           this.velocity[axis] = 0;
         }
       }
     }
 
-
-
-    // TODO: copy to this.position
-    this.x = this.proposedPosition.x;
-    this.y = this.proposedPosition.y;
-    this.z = this.proposedPosition.z;
-
+    this.position.copy(this.proposedPosition);
   }
 
   calculateOverlaps() {
@@ -271,7 +240,7 @@ class Player {
         for (let z = startZ; z <= endZ; z++) {
           if (this.world.solidAt(x, y, z)) {
             // box is mutated by intersect so we need to get a fresh one for each world block we check
-            box = this.getBox(); 
+            box = this.getBox();
             box.intersect(this.world.getBlockBox(x, y, z));
 
             overlaps.x.total += box.max.x - box.min.x;
@@ -291,7 +260,7 @@ class Player {
   }
 
 
-  
+
 
 
 

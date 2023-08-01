@@ -119,8 +119,6 @@ class Chunk {
   }
 
   generateMesh() {
-
-
     const verts = [];
     const indices = [];
     const normals = [];
