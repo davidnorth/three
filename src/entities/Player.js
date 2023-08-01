@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import KeyInput from '../utility/KeyInput';
 
-const RENDER_DISTANCE = 1;
+const RENDER_BOX_SIZE = 16;
 
 function round(number, precision) {
   return +number.toFixed(precision)
@@ -59,9 +59,7 @@ class Player {
     window.player = this;
 
 
-    // create an outlined box representing the player's bounding box
-    const bbGeometry = new THREE.BoxGeometry(this.bbWidth, this.bbHeight, this.bbDepth);
-    bbGeometry.translate(0, this.bbHeight * 0.5, 0);
+    const bbGeometry = new THREE.BoxGeometry(RENDER_BOX_SIZE*2, 4, RENDER_BOX_SIZE*2);
     this.bbMesh = new THREE.Mesh(
       bbGeometry,
       new THREE.MeshBasicMaterial({
@@ -69,6 +67,7 @@ class Player {
         wireframe: true,
       })
     );
+    this.bbMesh.position.y = 10;
     // this.scene.add(this.bbMesh);
 
 
@@ -79,9 +78,21 @@ class Player {
   // Recenter a box on the player's position
   updateRenderBox() {
     this.renderBox = new THREE.Box2(
-      new THREE.Vector2(this.position.x - RENDER_DISTANCE, this.position.z - RENDER_DISTANCE),
-      new THREE.Vector2(this.position.x + RENDER_DISTANCE, this.position.z + RENDER_DISTANCE)
+      new THREE.Vector2(this.position.x - RENDER_BOX_SIZE, this.position.z - RENDER_BOX_SIZE),
+      new THREE.Vector2(this.position.x + RENDER_BOX_SIZE, this.position.z + RENDER_BOX_SIZE)
     )
+    this.bbMesh.position.x = this.position.x;
+    this.bbMesh.position.z = this.position.z;
+
+  }
+
+  // If player has moved outside of the box, update the box
+  // and tell the world to load/unload chunks
+  checkRenderBox() {
+    if(!this.renderBox.containsPoint(new THREE.Vector2(this.position.x, this.position.z))) {
+      this.updateRenderBox();
+      this.world.updateLoadedChunks(this.position);
+    }
   }
 
   lookAround(dx, dy) {
@@ -104,13 +115,11 @@ class Player {
     this.doWorldCollisions();
     this.position.add(this.velocity);
     this.updateCamera();
-
-    this.bbMesh.position.copy(this.position);
+    this.checkRenderBox();
   }
 
   doInputs() {
-
-    const speed = 0.05;
+    const speed = 0.2;
     const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
     const up = new THREE.Vector3(0, 1, 0);
     const right = new THREE.Vector3().crossVectors(up, forward).normalize();

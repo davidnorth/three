@@ -3,6 +3,8 @@ import { CHUNK_WIDTH } from "./Chunk";
 import WorkerPool from '../workers/WorkerPool';
 import Chunk from "./Chunk";
 
+RENDER_DISTANCE = 12;
+
 // move to Math module
 function mod(n, m) {
   return ((n % m) + m) % m;
@@ -50,6 +52,14 @@ class World {
     this.chunks.set(this.getChunkKey(x, z), chunk);
   }
 
+  removeChunk(x, z) {
+    const chunk = this.getChunk(x, z);
+    console.log(chunk);
+    this.scene.remove(chunk.mesh);
+    chunk.dispose();
+    this.chunks.delete(this.getChunkKey(x, z));
+  }
+
   getChunk(x, z) {
     return this.chunks.get(this.getChunkKey(x, z));
   }
@@ -76,6 +86,31 @@ class World {
 
   solidAt(x, y, z) {
     return this.getBlockId(x, y, z) !== 0;
+  }
+
+  updateLoadedChunks(playerPosition) {
+    const playerChunkX = Math.floor(playerPosition.x / CHUNK_WIDTH);
+    const playerChunkZ = Math.floor(playerPosition.z / CHUNK_WIDTH);
+
+    // check which chunks need to be removed
+    for(let [key, chunk] of this.chunks) {
+      const [x, z] = key.split(':').map(Number);
+      if(Math.abs(x - playerChunkX) > RENDER_DISTANCE || Math.abs(z - playerChunkZ) > RENDER_DISTANCE) {
+        this.removeChunk(x, z);
+      }
+    }
+
+    for(let x = playerChunkX - RENDER_DISTANCE; x < playerChunkX + RENDER_DISTANCE; x++) {
+      for(let z = playerChunkZ - RENDER_DISTANCE; z < playerChunkZ + RENDER_DISTANCE; z++) {
+        if(!this.getChunk(x, z)) {
+          this.addNewChunk(x, z);
+        }
+      }
+    }
+
+
+
+
   }
 
 }

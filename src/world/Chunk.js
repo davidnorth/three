@@ -77,7 +77,6 @@ class Chunk {
     this.mesh.position.x = ox;
     this.mesh.position.z = oz;
     this.mesh.position.y = 0;
-    window.chunk = this;
   }
 
   // x represents left to right, z forwards and backwards and y up and down
@@ -113,6 +112,9 @@ class Chunk {
     return this.getBlockId(x, y, z) > 0 ? 1 : 0;
   }
 
+  dispose() {
+    this.geometry.dispose()
+  }
 
   setBlock(x, y, z, blockId) {
     this.blocks[this.getBlockIndex(x, y, z)] = blockId;
