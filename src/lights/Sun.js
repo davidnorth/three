@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+const SHADOW_AREA = 30;
+
 class Sun extends THREE.DirectionalLight {
 
   // call parent in constructor
@@ -12,10 +14,10 @@ class Sun extends THREE.DirectionalLight {
     this.shadow.mapSize.width = 1024 * 2;
     this.shadow.mapSize.height = 1024 * 2;
     // Define the visible area of the projected shadow
-    this.shadow.camera.left = -20;
-    this.shadow.camera.right = 20;
-    this.shadow.camera.top = 20;
-    this.shadow.camera.bottom = -20;
+    this.shadow.camera.left = -SHADOW_AREA;
+    this.shadow.camera.right = SHADOW_AREA;
+    this.shadow.camera.top = SHADOW_AREA;
+    this.shadow.camera.bottom = -SHADOW_AREA;
     // Set the near and far plane of the shadow camera
     this.shadow.camera.near = 0.5;
     this.shadow.camera.far = 500;

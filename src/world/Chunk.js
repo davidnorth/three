@@ -118,9 +118,11 @@ class Chunk {
 
   setBlock(x, y, z, blockId) {
     this.blocks[this.getBlockIndex(x, y, z)] = blockId;
+    this.generateMesh();
   }
 
   generateMesh() {
+    this.geometry.dispose();
     const verts = [];
     const indices = [];
     const normals = [];

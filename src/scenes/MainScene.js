@@ -10,9 +10,10 @@ class MainScene extends THREE.Scene {
   constructor() {
     super();
 
-    this.fog = new THREE.FogExp2( BG_COLOR, 0.008);
+    this.fog = new THREE.FogExp2( BG_COLOR, 0.006);
     this.sunLight = new Sun();
     this.add(this.sunLight);
+    this.add( this.sunLight.target );
 
     this.ambientLight = new THREE.AmbientLight( 0xC4E9FF, 0.7 ); 
     this.add( this.ambientLight );
@@ -20,36 +21,47 @@ class MainScene extends THREE.Scene {
 
 
     // The sun
-    const sunLightSphere = new THREE.Mesh(
+    this.sunLightSphere = new THREE.Mesh(
       new THREE.SphereGeometry(10.2, 16, 16),
       new THREE.MeshPhongMaterial({ 
         color: 0x000000,
         emissive: 0xF8EC8D,
         fog: false,
         emissiveIntensity: 5,
-
       })
     );
     // calculate a position for the sun that's based on the sunLight position
     // but further away along the sunLight vector
     const sunPosition = this.sunLight.position.clone();
     sunPosition.multiplyScalar(8);
-    sunLightSphere.position.copy(sunPosition);
-    this.add(sunLightSphere);
+    this.sunLightSphere.position.copy(sunPosition);
+    this.add(this.sunLightSphere);
 
 
     // The sky
-    const skySphere = new THREE.Mesh(
+    this.skySphere = new THREE.Mesh(
       new THREE.SphereGeometry(1000, 16, 16),
       new THREE.ShaderMaterial(skyShader)
     );
     // turn sphere geometry inside out so we can shade the inside of the sphere
-    this.add(skySphere);
+    this.add(this.skySphere);
 
+  }
 
+  update(delta, world, player) {
+    this.skySphere.position.x = player.position.x;
+    this.skySphere.position.z = player.position.z;
 
+    this.sunLight.position.set(player.position.x + 80, 50, player.position.z + 50);
+    this.sunLight.target.position.set(player.position.x, 0, player.position.z);
 
+    const lightDirection = new THREE.Vector3();
+    lightDirection.subVectors(this.sunLight.target.position, this.sunLight.position);
+    lightDirection.normalize();
 
+    const sunPosition = this.sunLight.position.clone();
+    sunPosition.add(lightDirection.multiplyScalar(-500));
+    this.sunLightSphere.position.copy(sunPosition);
   }
 
   chunkBoundaries() {

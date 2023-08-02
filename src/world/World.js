@@ -54,7 +54,6 @@ class World {
 
   removeChunk(x, z) {
     const chunk = this.getChunk(x, z);
-    console.log(chunk);
     this.scene.remove(chunk.mesh);
     chunk.dispose();
     this.chunks.delete(this.getChunkKey(x, z));
@@ -82,6 +81,18 @@ class World {
     if (!chunk) return 0;
     // world coordinates to chunk coordinates
     return chunk.getBlockId(mod(x, CHUNK_WIDTH), y, mod(z, CHUNK_WIDTH));
+  }
+
+  setBlock(x, y, z, id) {
+    console.log('setBlock', x, y, z, id);
+    // first find the chunk containing this block
+    const chunkX = Math.floor(x / CHUNK_WIDTH);
+    const chunkZ = Math.floor(z / CHUNK_WIDTH);
+    const chunk = this.getChunk(chunkX, chunkZ);
+    console.log('chunk', chunkX, chunkZ);
+    if (!chunk) return;
+    // world coordinates to chunk coordinates
+    chunk.setBlock(mod(x, CHUNK_WIDTH), y, mod(z, CHUNK_WIDTH), id);
   }
 
   solidAt(x, y, z) {

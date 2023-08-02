@@ -33,7 +33,7 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.position = new THREE.Vector3(0, 25, 0);
+    this.position = new THREE.Vector3(0, 20, 0);
 
     this.bbWidth = BB_WIDTH;
     this.bbDepth = BB_WIDTH;
@@ -47,7 +47,9 @@ class Player {
     this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1200);
     this.updateCamera();
 
-    // this.controls = new OrbitControls(this.camera, document.body);
+    window.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+
 
     // Raycaster to find which block face we are looking at
     this.eyeRaycaster = new THREE.Raycaster();
@@ -119,7 +121,7 @@ class Player {
   }
 
   doInputs() {
-    const speed = 0.2;
+    const speed = 0.1;
     const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
     const up = new THREE.Vector3(0, 1, 0);
     const right = new THREE.Vector3().crossVectors(up, forward).normalize();
@@ -142,8 +144,21 @@ class Player {
       this.velocity.y = 0.06;
     }
 
+
   }
 
+  handleMouseDown(event) {
+    if (event.button === 2) {
+      this.world.setBlock(this.deleteBlockPos.x, this.deleteBlockPos.y, this.deleteBlockPos.z, 0);
+    }
+    if (event.button === 0) {
+      this.world.setBlock(this.newBlockPos.x, this.newBlockPos.y, this.newBlockPos.z, 3);
+    }
+  }
+
+  handleMouseUp(event) {
+
+  }
 
 
 

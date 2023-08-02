@@ -74,6 +74,7 @@ function animate() {
   requestAnimationFrame(animate);
   // TODO: Instead update all entities
   player.update(delta);
+  scene.update(delta, world, player);
   gameRenderer.bokehPass.uniforms.focus.value = player.eyeRayIntersectDistance;
   gameRenderer.render();
 }
