@@ -132,10 +132,11 @@ class Player {
       this.velocity.x = forward.x * speed * -1;
       this.velocity.z = forward.z * speed * -1;
     } else if (this.keyInput.keys.a) {
-      this.velocity.z = -speed;
-    } else if (this.keyInput.keys.d) {
       this.velocity.x = right.x * speed;
-      this.velocity.z = -right.z * speed;
+      this.velocity.z = right.z * speed;
+    } else if (this.keyInput.keys.d) {
+      this.velocity.x = right.x * speed * -1
+      this.velocity.z = right.z * speed * -1;
     } else {
       this.velocity.x = 0;
       this.velocity.z = 0;
