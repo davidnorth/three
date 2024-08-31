@@ -35,7 +35,7 @@ class MainScene extends THREE.Scene {
     this.water.receiveShadow = true;
     this.water.rotation.x = Math.PI / 2;
     this.water.position.y = 30.1;
-    this.add(this.water);
+    //this.add(this.water);
 
 
     // The sun

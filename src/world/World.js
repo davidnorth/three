@@ -3,7 +3,7 @@ import { CHUNK_WIDTH } from "./Chunk";
 import WorkerPool from '../workers/WorkerPool';
 import Chunk from "./Chunk";
 
-RENDER_DISTANCE = 32;
+RENDER_DISTANCE = 16;
 
 // move to Math module
 function mod(n, m) {
@@ -22,7 +22,9 @@ class World {
     this.chunkGenerationWorkerPool = new WorkerPool(
       'generateChunk',
       window.navigator.hardwareConcurrency - 1,
-      ({data: {key, buffer}}) => {
+      ({data: {key, buffer, bufferDecoration}}) => {
+
+        console.log('Generate result, bufferDecoration = ', bufferDecoration);
         const chunk = this.chunks.get(key);
         chunk.blocks = new Uint8Array(buffer);
         chunk.generateMesh();

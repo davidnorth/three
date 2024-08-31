@@ -5,8 +5,8 @@ export const CHUNK_WIDTH = 16;
 export const CHUNK_HEIGHT = 64;
 
 // the dimensions of the blocks texture map in blocks width and height
-const TEXTURE_BLOCKS_WIDTH = 8
-const TEXTURE_BLOCKS_HEIGHT = 1
+const TEXTURE_BLOCKS_WIDTH = 19
+const TEXTURE_BLOCKS_HEIGHT = 19
 // ...and resulting offset per block in UV space
 const unitOffsetX = 1/TEXTURE_BLOCKS_WIDTH
 const unitOffsetY = 1/TEXTURE_BLOCKS_HEIGHT
@@ -22,14 +22,15 @@ const faceNormals = {
 
 // TODO: Move all this somewhere else
 const BLOCK_TEXTURE_UVS = {
-  diamondOre: uvsForTextureBlock(0, 0),
+  diamondOre: uvsForTextureBlock(1, 0),
   dirt: uvsForTextureBlock(1, 0),
-  grassSide: uvsForTextureBlock(2, 0),
-  grassTop: uvsForTextureBlock(3, 0),
-  ironOre: uvsForTextureBlock(4, 0),
-  oakLogSide: uvsForTextureBlock(5, 0),
-  oakLogTop: uvsForTextureBlock(6, 0),
-  stone: uvsForTextureBlock(7, 0),
+  grassSide: uvsForTextureBlock(16, 11),
+  grassTop: uvsForTextureBlock(1, 10),
+  ironOre: uvsForTextureBlock(1, 0),
+  stone: uvsForTextureBlock(8, 18),
+  oakLogSide: uvsForTextureBlock(9, 6),
+  oakLogTop: uvsForTextureBlock(10, 6),
+  oakLeaves: uvsForTextureBlock(5, 8),
 }
 
 const BLOCK_ID_TEXTURES = {
@@ -47,7 +48,17 @@ const BLOCK_ID_TEXTURES = {
     side: BLOCK_TEXTURE_UVS.stone,
     top: BLOCK_TEXTURE_UVS.stone,
     bottom: BLOCK_TEXTURE_UVS.stone,
-  }
+  },
+  4: {
+    side: BLOCK_TEXTURE_UVS.oakLogSide,
+    top: BLOCK_TEXTURE_UVS.oakLogTop,
+    bottom: BLOCK_TEXTURE_UVS.oakLogTop,
+  },
+  5: {
+    side: BLOCK_TEXTURE_UVS.oakLeaves,
+    top: BLOCK_TEXTURE_UVS.oakLeaves,
+    bottom: BLOCK_TEXTURE_UVS.oakLeaves,
+  },
 }
 
 function uvsForTextureBlock(x, y) {
@@ -60,11 +71,16 @@ function uvsForTextureBlock(x, y) {
 }
 
 
-
+const CHUNK_STATES = [
+  'new',
+  'terrainGenerated',
+  'decorationMerged',
+]
 class Chunk {
 
   // ox and oz are the chunk's origin in world space
   constructor(ox, oz) {
+    this.state = 0;
     this.ox = ox;
     this.oz = oz;
     // Extra margin of blocks in x and z

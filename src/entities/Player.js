@@ -21,7 +21,8 @@ const WALK_SPEED = 4.3; // m/s
 // const WALK_SPEED = 1.0;
 
 
-const GRAVITY = 0.003;
+//const GRAVITY = 0.003;
+const GRAVITY = 0.00;
 
 const MAX_COLLISION_CHECKS = 2;
 
@@ -40,7 +41,7 @@ class Player {
     this.bbHeight = BB_HEIGHT;
 
     // define a vector representing the direction the player is looking in
-    this.direction = new THREE.Vector3(0, -1, 0);
+    this.direction = new THREE.Vector3(0, -0.8, 0.5);
     // direction and magnitude of current movement
     this.velocity = new THREE.Vector3(0, 0, 0);
 
