@@ -3,7 +3,7 @@ import { CHUNK_WIDTH } from "./Chunk";
 import WorkerPool from '../workers/WorkerPool';
 import Chunk from "./Chunk";
 
-RENDER_DISTANCE = 12;
+RENDER_DISTANCE = 32;
 
 // move to Math module
 function mod(n, m) {
@@ -20,7 +20,7 @@ class World {
     this.chunks = new Map();
 
     this.chunkGenerationWorkerPool = new WorkerPool(
-      'generateChunk.js',
+      'generateChunk',
       window.navigator.hardwareConcurrency - 1,
       ({data: {key, buffer}}) => {
         const chunk = this.chunks.get(key);

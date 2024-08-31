@@ -33,7 +33,7 @@ class GameRenderer {
     bloomPass.strength = 0.4;
     bloomPass.threshold = 1.0;
     bloomPass.radius = 0.1;
-    this.mainComposer.addPass(bloomPass);
+    //this.mainComposer.addPass(bloomPass);
     
     this.bokehPass = new BokehPass(scene, camera, {
       focus: 50,
@@ -42,7 +42,7 @@ class GameRenderer {
       width: window.innerWidth,
       height: window.innerHeight
     });
-    this.mainComposer.addPass(this.bokehPass);
+    //this.mainComposer.addPass(this.bokehPass);
 
     // Add contrast shader
     const contrastPass = new ShaderPass(contrastShader);

@@ -4,44 +4,37 @@ const noise = perlin.noise.simplex2;
 const noise3 = perlin.noise.perlin3;
 
 
-const GROUND_LEVEL = 8;
+const GROUND_LEVEL = 32;
 
-const NOISE_SCALE_1 = 0.006;
-const NOISE_SCALE_2 = 0.045;
-const NOISE_SCALE_3 = 0.03;
+const NOISE_SCALE_1 = 0.026;
+const NOISE_SCALE_2 = 0.024;
+const NOISE_SCALE_3 = 0.005
 const NOISE_SCALE_4 = 0.1;
 
+function fractalNoise(x, z, amplitude = 1, scale = 1) {
+  let value = 0;
+  for(let i=0; i<4; i++) {
+    value += noise(x * scale, z * scale) * amplitude;
+    amplitude *= 0.5;
+    scale *= 2;
+  }
+  return value;
+}
+
 export function generate(x,y,z) {
-  return simpleHeightmap(x,y,z)
-
-  let  thresh = 0.2;
 
 
-  let block
-  if(y === 60) {
-    block = 1;
-  } else {
-    block = y > 50 ? 2 : 3;
-  }
+  let elevationScale = (noise(x * NOISE_SCALE_1, z * NOISE_SCALE_1) +1 ) * 1;
+  elevationScale = Math.pow(elevationScale, 2);
 
-  let value  = noise3(x * NOISE_SCALE_3, y * NOISE_SCALE_3, z * NOISE_SCALE_3);
-  let value2 = noise3(x * NOISE_SCALE_4, y * NOISE_SCALE_4, z * NOISE_SCALE_4);
-
-  if(y>30) return 0;
-  return (value) > thresh ? block : 0;
+  const value = GROUND_LEVEL + fractalNoise(x, z, 10, 0.01);
 
 
+  let groundBlock = y < 29 ? 3 : 1;
+  return y > value ? 0 : groundBlock;
 
 
-  // let value = noise(x * NOISE_SCALE_1, z * NOISE_SCALE_1);
-  return (y > GROUND_LEVEL + value * 10) ? 0 : 1;
-
-  if((x % 10 === 0 || z % 10 === 0) && y === 9) {
-    return 1;
-  }
-
-  return y>8 ? 0 : 1;
-  // return value > 0 ? 2 : 0;
+  // return simpleHeightmap(x,y,z)
 }
 
 function simpleHeightmap(x,y,z) {
@@ -52,10 +45,12 @@ function simpleHeightmap(x,y,z) {
   // let groundHeight = noise(x * NOISE_SCALE_1, z * NOISE_SCALE_1) * 4 + GROUND_LEVEL;
   let noise1 = (noise(x * NOISE_SCALE_2, z * NOISE_SCALE_2) + 1 ) * 0.5
   
-  let scaledNoise1 = noise1 * elevationScale * 30;
+  let scaledNoise1 = noise1 * elevationScale * 40;
 
   
   let groundHeight = GROUND_LEVEL + scaledNoise1;
+
+  groundHeight = groundHeight + noise(x * NOISE_SCALE_3, z * NOISE_SCALE_3) * 10;
 
 
 

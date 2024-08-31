@@ -1,13 +1,21 @@
-import perlin from 'perlin';
-window.perlin=perlin;
+
+const URLS = {
+  generateChunk: new URL('./generateChunk.js', import.meta.url),
+
+}
+
+
 class WorkerPool {
 
-  constructor (workerFilename, workerCount, handleMessage) {
+  constructor (workerName, workerCount, handleMessage) {
     this.workers = [];
     this.lastWorkerIndex = 0;
     let worker;
+
+    const url = URLS[workerName];
+
     for(let i=0; i<workerCount; i++) {
-      let url = new URL('./generateChunk.js', import.meta.url);
+      let fullFilename = './generateChunk.js';
       worker = new Worker(url, { type: 'module' });
       worker.onmessage = handleMessage;
       this.workers.push(worker);

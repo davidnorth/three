@@ -19,6 +19,24 @@ class MainScene extends THREE.Scene {
     this.add( this.ambientLight );
 
 
+    // A flat plain representing water
+    this.water = new THREE.Mesh(
+      new THREE.PlaneGeometry(1000, 1000),
+      new THREE.MeshPhongMaterial({
+        color: 0x3333ff,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false,
+        fog: false,
+      })
+    );
+    this.water.castShadow = false;
+    this.water.receiveShadow = true;
+    this.water.rotation.x = Math.PI / 2;
+    this.water.position.y = 30.1;
+    this.add(this.water);
+
 
     // The sun
     this.sunLightSphere = new THREE.Mesh(

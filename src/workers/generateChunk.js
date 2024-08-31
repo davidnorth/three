@@ -24,5 +24,6 @@ self.onmessage = function({data: {key, x, z}}) {
     }
   }
 
+  console.log('chunk complete', key )
   self.postMessage({key, buffer}, [buffer]);
 };

@@ -118,7 +118,9 @@ class Chunk {
 
   setBlock(x, y, z, blockId) {
     this.blocks[this.getBlockIndex(x, y, z)] = blockId;
+    console.time("generateMesh")
     this.generateMesh();
+    console.timeEnd("generateMesh")
   }
 
   generateMesh() {
@@ -428,7 +430,6 @@ class Chunk {
   }
 
 
-  // Using this chart we can deduce a pattern.  
   // Let side1 and side2 be 0/1 depending on the presence of the side voxels 
   // and let corner be the opacity state of the corner voxel.  
   // Then we can compute the ambient occlusion of a vertex using the following function:

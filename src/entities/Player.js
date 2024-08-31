@@ -33,7 +33,7 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.position = new THREE.Vector3(0, 20, 0);
+    this.position = new THREE.Vector3(0, 40, 0);
 
     this.bbWidth = BB_WIDTH;
     this.bbDepth = BB_WIDTH;
