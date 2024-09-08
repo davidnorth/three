@@ -22,8 +22,6 @@ class World {
       'generateChunk',
       window.navigator.hardwareConcurrency - 1,
       ({data: {key, buffer, bufferDecoration}}) => {
-
-        console.log('Generated chunk');
         const chunk = this.chunks.get(key);
         chunk.blocks = new Uint8Array(buffer);
         chunk.generateMesh();
@@ -40,7 +38,6 @@ class World {
 
   // x and z represent the chunks position in the grid of chunks, not the world
   addNewChunk(x, z) {
-    console.log('addNewChunk');
     const chunk = new Chunk(x * CHUNK_WIDTH, z * CHUNK_WIDTH);
     this.setChunk(x, z, chunk);
     this.chunkGenerationWorkerPool.postMessage({ key: this.getChunkKey(x, z), x: chunk.ox, z: chunk.oz })

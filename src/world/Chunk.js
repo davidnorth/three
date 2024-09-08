@@ -11,14 +11,14 @@ const TEXTURE_BLOCKS_HEIGHT = 19
 const unitOffsetX = 1/TEXTURE_BLOCKS_WIDTH
 const unitOffsetY = 1/TEXTURE_BLOCKS_HEIGHT
 
-const faceNormals = {
-  up: new THREE.Vector3(0, 1, 0),
-  down: new THREE.Vector3(0, -1, 0),
-  right: new THREE.Vector3(1, 0, 0),
-  left: new THREE.Vector3(-1, 0, 0),
-  front: new THREE.Vector3(0, 0, 1),
-  back: new THREE.Vector3(0, 0, -1)
-};
+// Face normal directions (see shaders.js)
+const NORMAL_LEFT = 0;
+const NORMAL_RIGHT = 1;
+const NORMAL_BACK = 2;
+const NORMAL_FRONT = 3;
+const NORMAL_TOP = 4;
+const NORMAL_BOTTOM = 5;
+
 
 // TODO: Move all this somewhere else
 const BLOCK_TEXTURE_UVS = {
@@ -134,9 +134,7 @@ class Chunk {
 
   setBlock(x, y, z, blockId) {
     this.blocks[this.getBlockIndex(x, y, z)] = blockId;
-    console.time("generateMesh")
     this.generateMesh();
-    console.timeEnd("generateMesh")
   }
 
   generateMesh() {
@@ -146,6 +144,7 @@ class Chunk {
     const normals = [];
     const uvs = [];
     const lightValues = [];
+    const norms = [];
 
     let vertIndex = 0;
 
@@ -162,6 +161,9 @@ class Chunk {
 
           // Top face
           if (this.isNonSolid(this.getBlockId(x, y + 1, z))) {
+            // Normal direction
+            norms.push(NORMAL_TOP);
+
             // Add verts
             verts.push(x, y + 1, z); // back left
             verts.push(x, y + 1, z + 1); // front left
@@ -197,11 +199,6 @@ class Chunk {
             lightValues.push(vl1, vl2, vl3, vl4);
 
 
-
-            // Set face normal up
-            for (let i = 0; i < 4; i++) {
-              normals.push(faceNormals.up.x, faceNormals.up.y, faceNormals.up.z);
-            }
             // Add UVs
             Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].top);
             // Add tris
@@ -212,6 +209,9 @@ class Chunk {
 
           // Back face
           if (this.isNonSolid(this.getBlockId(x, y, z - 1))) {
+            // Normal direction
+            norms.push(NORMAL_BACK);
+
             // Add verts
             verts.push(x + 1, y + 1, z); // top right
             verts.push(x + 1, y, z); // bottom right
@@ -246,10 +246,7 @@ class Chunk {
             );
             lightValues.push(vl1, vl2, vl3, vl4);
 
-            // Set face normal front
-            for (let i = 0; i < 4; i++) {
-              normals.push(faceNormals.back.x, faceNormals.back.y, faceNormals.back.z);
-            }
+
             // Add UVs
             Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
@@ -260,6 +257,9 @@ class Chunk {
 
           // Front face
           if (this.isNonSolid(this.getBlockId(x, y, z + 1))) {
+            // Normal direction
+            norms.push(NORMAL_FRONT);
+
             // Add verts
             verts.push(x, y + 1, z + 1); // top left
             verts.push(x, y, z + 1); // bottom left
@@ -295,11 +295,6 @@ class Chunk {
             lightValues.push(vl1, vl2, vl3, vl4);
 
 
-
-            // Set face normal front
-            for (let i = 0; i < 4; i++) {
-              normals.push(faceNormals.front.x, faceNormals.front.y, faceNormals.front.z);
-            }
             // Add UVs
             Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
@@ -310,6 +305,9 @@ class Chunk {
 
           // Left face
           if (this.isNonSolid(this.getBlockId(x - 1, y, z))) {
+            // Normal direction
+            norms.push(NORMAL_LEFT);
+
             // Add verts
             verts.push(x, y + 1, z); // top back
             verts.push(x, y, z); // bottom back
@@ -343,10 +341,7 @@ class Chunk {
             );
             lightValues.push(vl1, vl2, vl3, vl4);
 
-            // Set face normal left
-            for (let i = 0; i < 4; i++) {
-              normals.push(faceNormals.left.x, faceNormals.left.y, faceNormals.left.z);
-            }
+
             // Add UVs
             Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
@@ -357,6 +352,9 @@ class Chunk {
 
           // Right face
           if (this.isNonSolid(this.getBlockId(x + 1, y, z))) {
+            // Normal direction
+            norms.push(NORMAL_RIGHT);
+
             // Add verts
             verts.push(x + 1, y + 1, z + 1); // top front
             verts.push(x + 1, y, z + 1); // bottom front
@@ -389,10 +387,7 @@ class Chunk {
             );
             lightValues.push(vl1, vl2, vl3, vl4);
 
-            // Set face normal right
-            for (let i = 0; i < 4; i++) {
-              normals.push(faceNormals.right.x, faceNormals.right.y, faceNormals.right.z);
-            }
+
             // Add UVs
             Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].side);
             // Add tris
@@ -403,6 +398,9 @@ class Chunk {
 
           // Bottom face
           if (this.isNonSolid(this.getBlockId(x, y - 1, z))) {
+            // Normal direction
+            norms.push(NORMAL_BOTTOM);
+
             // Add verts
             verts.push(x, y, z); // front left
             verts.push(x + 1, y, z); // front right
@@ -411,10 +409,7 @@ class Chunk {
             // Vertex lighting
             lightValues.push(1,1,1,1);
 
-            // Set face normal down
-            for (let i = 0; i < 4; i++) {
-              normals.push(faceNormals.down.x, faceNormals.down.y, faceNormals.down.z);
-            }
+
             // Add UVs
             Array.prototype.push.apply(uvs, BLOCK_ID_TEXTURES[blockId].bottom);
             // Add tris
@@ -428,17 +423,21 @@ class Chunk {
     }
 
 
+
     const packedVertData = new Uint32Array(verts.length);
     for(let i = 0; i<verts.length; i += 3) {
-      // 5 bits per vert coordinate
+      // Vert position, xyz 5 6 and 5 bits (chunk is taller than wide)
       const x = (verts[i] ) << 11;
       const y = (verts[i+1] ) << 5;
       const z = (verts[i+2] );
 
+      // AO light value - 2 bits
       const ao = lightValues[i / 3] << 16
-//      console.log(ao.toString(2));
 
-      packedVertData[i / 3] = ao | x | y | z;
+      // Normal direction - 0-5 - 3 bits
+      const n = norms[ Math.floor((i/3) / 4)  ] << 18
+      
+      packedVertData[i / 3] = n | ao | x | y | z;
     }
 
 
@@ -450,13 +449,7 @@ class Chunk {
     this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0,0,0, 16,64,16 ]), 3));
     this.geometry.setAttribute('packed', new THREE.BufferAttribute(packedVertData, 1));
     this.geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
-    this.geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    
-    const lightValuesInt8 = Uint8Array.from(lightValues);
-    const lightValuesAttribute = new THREE.BufferAttribute(lightValuesInt8, 1);
-
-    
   }
 
 

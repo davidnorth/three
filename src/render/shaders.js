@@ -43,9 +43,10 @@ export function customizeMeshLambertShader(shader) {
        attribute uint packed;
        varying float vLightValue;
 
+       // Unpacking masks
        #define SIX_BITS 63u
        #define FIVE_BITS 31u
-
+       #define THREE_BITS 7u
      ` + shader.vertexShader;
 
   shader.vertexShader = shader.vertexShader.replace(
@@ -57,12 +58,31 @@ export function customizeMeshLambertShader(shader) {
       float z = float(packed & FIVE_BITS);
       vec3 transformed = vec3( x, y, z );
       // Unpack AO light value
-      vLightValue = float(packed  >> 16 & 3u);
-
-
-      
+      vLightValue = float(packed >> 16 & 3u);
       `
   );
+
+  shader.vertexShader = shader.vertexShader.replace(
+    '#include <beginnormal_vertex>',
+    `
+      // positive X is left, positive Z is back. positive Y is up
+      vec3 faceNormals[6];
+      faceNormals[0] = vec3( -1.0, 0.0, 0.0 ); // Left
+      faceNormals[1] = vec3( 1.0, 0.0, 0.0 ); // Right
+      faceNormals[2] = vec3( 0.0, 0.0, 1.0 ); // Back
+      faceNormals[3] = vec3( 0.0, 0.0, -1.0 ); // Front
+      faceNormals[4] = vec3( 0.0, 1.0, 0.0 ); // Top
+      faceNormals[5] = vec3( 0.0, -1.0, 0.0 ); // Bottom
+
+      uint n = packed >> 18 & THREE_BITS;
+      vec3 objectNormal = faceNormals[n];
+
+      //vec3 objectNormal = normal ;
+
+      `
+  );
+
+
 
   shader.fragmentShader = `
     varying float vLightValue;
