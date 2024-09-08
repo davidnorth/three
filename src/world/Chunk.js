@@ -424,7 +424,7 @@ class Chunk {
 
 
 
-    const packedVertData = new Uint32Array(verts.length);
+    const packedVertData = new Uint32Array(verts.length / 3);
     for(let i = 0; i<verts.length; i += 3) {
       // Vert position, xyz 5 6 and 5 bits (chunk is taller than wide)
       const x = (verts[i] ) << 11;
