@@ -93,6 +93,12 @@ class Chunk {
     this.mesh.position.x = ox;
     this.mesh.position.z = oz;
     this.mesh.position.y = 0;
+
+    // can override this to perform selective culling after we split chunks into multiple meshes
+    this.mesh.visible = true;
+
+    const center = new THREE.Vector3(0, CHUNK_HEIGHT * 0.5, 0);
+    this.mesh.boundingSphere = new THREE.Sphere(center, 20);  
   }
 
   // x represents left to right, z forwards and backwards and y up and down
@@ -446,7 +452,6 @@ class Chunk {
     // Assign the vertex, index, and UV data to the geometry
     this.geometry.dispose();
     // Theory: dummy position data fixes frustrum culling by defining a bounding box
-    this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0,0,0, 16,64,16 ]), 3));
     this.geometry.setAttribute('packed', new THREE.BufferAttribute(packedVertData, 1));
     this.geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
     this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
