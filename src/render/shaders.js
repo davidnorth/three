@@ -40,14 +40,27 @@ export function customizeMeshLambertShader(shader) {
 
   shader.vertexShader = `
        attribute float lightValue;
+       attribute uint packed;
        varying float vLightValue;
+
+       #define SIX_BITS 63u
+       #define FIVE_BITS 31u
+
      ` + shader.vertexShader;
 
   shader.vertexShader = shader.vertexShader.replace(
     '#include <begin_vertex>',
     `
-        #include <begin_vertex>
-        vLightValue = lightValue;
+      // Unpack position
+      float x = float(packed >> 11 & FIVE_BITS);
+      float y = float(packed >> 5 & SIX_BITS);
+      float z = float(packed & FIVE_BITS);
+      vec3 transformed = vec3( x, y, z );
+      // Unpack AO light value
+      vLightValue = float(packed  >> 16 & 3u);
+
+
+      
       `
   );
 

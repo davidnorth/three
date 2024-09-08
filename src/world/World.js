@@ -102,6 +102,7 @@ class World {
   }
 
   updateLoadedChunks(playerPosition) {
+    //return;
     const playerChunkX = Math.floor(playerPosition.x / CHUNK_WIDTH);
     const playerChunkZ = Math.floor(playerPosition.z / CHUNK_WIDTH);
 

@@ -44,6 +44,7 @@ textureLoader.load('/blocks/blocks.png', function(texture){
       world.addNewChunk(x, z);
     }
   }
+  //world.addNewChunk(0, 0);
 
   // request pointer lock
 

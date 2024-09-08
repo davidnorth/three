@@ -428,24 +428,35 @@ class Chunk {
     }
 
 
+    const packedVertData = new Uint32Array(verts.length);
+    for(let i = 0; i<verts.length; i += 3) {
+      // 5 bits per vert coordinate
+      const x = (verts[i] ) << 11;
+      const y = (verts[i+1] ) << 5;
+      const z = (verts[i+2] );
+
+      const ao = lightValues[i / 3] << 16
+//      console.log(ao.toString(2));
+
+      packedVertData[i / 3] = ao | x | y | z;
+    }
+
 
 
     // geometry holds all faces for a chunk
     // Assign the vertex, index, and UV data to the geometry
     this.geometry.dispose();
-    this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+    // Theory: dummy position data fixes frustrum culling by defining a bounding box
+    this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0,0,0, 16,64,16 ]), 3));
+    this.geometry.setAttribute('packed', new THREE.BufferAttribute(packedVertData, 1));
     this.geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(indices), 1));
     this.geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-
-
     
     const lightValuesInt8 = Uint8Array.from(lightValues);
     const lightValuesAttribute = new THREE.BufferAttribute(lightValuesInt8, 1);
-    this.geometry.setAttribute('lightValue', lightValuesAttribute);
 
-
-
+    
   }
 
 
