@@ -8,6 +8,7 @@
     "lil-gui": "^0.18.2",
     "perlin": "^1.0.0",
     "perlin-simplex": "^0.0.3",
+    "stats.js": "^0.17.0",
     "three": "^0.154.0"
   }
 }

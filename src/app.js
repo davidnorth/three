@@ -7,6 +7,9 @@ import { customizeMeshLambertShader } from './render/shaders';
 import World from './world/World';
 import Player from './entities/Player';
 import GUI from 'lil-gui'; 
+import Stats from 'stats.js';
+
+import { RENDER_DISTANCE } from './constants';
 
 
 const gui = new GUI();
@@ -36,7 +39,6 @@ textureLoader.load('/blocks/blocks.png', function(texture){
   gui.add(blockMaterial, 'wireframe')
   world.blockMaterial = blockMaterial;
 
-  const RENDER_DISTANCE = 2;
   for(let x=-RENDER_DISTANCE; x<RENDER_DISTANCE; x++) {
     for(let z=-RENDER_DISTANCE; z<RENDER_DISTANCE; z++) {
       world.addNewChunk(x, z);
@@ -67,14 +69,25 @@ document.addEventListener('mousemove', function (event) {
 window.debugVisible = true;
 gui.add(self, 'debugVisible');
 
+
+var stats = new Stats();
+stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
+
+
 const clock = new THREE.Clock();
 
 function animate() {
+  stats.begin();
   const delta = clock.getDelta(); 
-  requestAnimationFrame(animate);
   // TODO: Instead update all entities
   player.update(delta);
   scene.update(delta, world, player);
   gameRenderer.bokehPass.uniforms.focus.value = player.eyeRayIntersectDistance;
   gameRenderer.render();
+  stats.end();
+  requestAnimationFrame(animate);
+
 }
+
+

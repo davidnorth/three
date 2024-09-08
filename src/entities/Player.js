@@ -17,7 +17,7 @@ const BB_WIDTH = 1.0;
 
 const MOUSE_SENSITIVITY = 0.003;
 
-const WALK_SPEED = 4.3; // m/s
+const WALK_SPEED = 1; // m/s
 // const WALK_SPEED = 1.0;
 
 
@@ -34,7 +34,7 @@ class Player {
     this.world = world;
     this.scene = scene;
 
-    this.position = new THREE.Vector3(0, 40, 0);
+    this.position = new THREE.Vector3(0, 60, 0);
 
     this.bbWidth = BB_WIDTH;
     this.bbDepth = BB_WIDTH;
@@ -122,7 +122,7 @@ class Player {
   }
 
   doInputs() {
-    const speed = 0.1;
+    const speed = WALK_SPEED;
     const forward = new THREE.Vector3(this.direction.x, 0, this.direction.z).normalize();
     const up = new THREE.Vector3(0, 1, 0);
     const right = new THREE.Vector3().crossVectors(up, forward).normalize();

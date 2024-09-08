@@ -438,7 +438,10 @@ class Chunk {
     this.geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
     this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
 
-    const lightValuesAttribute = new THREE.Float32BufferAttribute(lightValues, 1);
+
+    
+    const lightValuesInt8 = Uint8Array.from(lightValues);
+    const lightValuesAttribute = new THREE.BufferAttribute(lightValuesInt8, 1);
     this.geometry.setAttribute('lightValue', lightValuesAttribute);
 
 
