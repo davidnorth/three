@@ -4,9 +4,9 @@ const noise = perlin.noise.simplex2;
 const noise3 = perlin.noise.perlin3;
 
 
-const GROUND_LEVEL = 34;
+const GROUND_LEVEL = 52;;
 
-const NOISE_SCALE_1 = 0.026;
+const NOISE_SCALE_1 = 0.06;
 const NOISE_SCALE_2 = 0.024;
 const NOISE_SCALE_3 = 0.005
 const NOISE_SCALE_4 = 0.1;
@@ -32,15 +32,22 @@ export function generate(x,y,z) {
 
   // return 1;
 
-
-  let elevationScale = (noise(x * NOISE_SCALE_1, z * NOISE_SCALE_1) +1 ) * 1;
-  elevationScale = Math.pow(elevationScale, 2);
-
-  const value = GROUND_LEVEL + fractalNoise(x, z, 10, 0.01);
+  if(y > GROUND_LEVEL) return 0;
 
 
-  let groundBlock = y < 29 ? 3 : 1;
-  return y > value ? 0 : groundBlock;
+  let r = (noise3(x * NOISE_SCALE_1, y * NOISE_SCALE_1, z * NOISE_SCALE_1) +1 ) * 1;
+  r *= (noise3(x * NOISE_SCALE_2, y * NOISE_SCALE_2, z * NOISE_SCALE_2) +1 ) * 1;
+
+  r *= (y/16);
+
+  //let elevationScale = (noise(x * NOISE_SCALE_1, z * NOISE_SCALE_1) +1 ) * 1;
+  //elevationScale = Math.pow(elevationScale, 2);
+
+  //const value = GROUND_LEVEL + fractalNoise(x, z, 10, 0.01);
+
+
+  let groundBlock = y < 19 ? 3 : 1;
+  return r > 0.9 ? 0 : groundBlock;
 
 
   // return simpleHeightmap(x,y,z)
